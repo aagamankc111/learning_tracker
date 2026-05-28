@@ -1,13 +1,29 @@
 import { supabase } from '../config/supabase';
+import { cacheData, getCachedData, isOnline } from './indexedDBService';
 
 export async function fetchUserProgress(userId) {
-  const { data, error } = await supabase
-    .from('user_progress')
-    .select('subtopic_id, completed')
-    .eq('user_id', userId);
+  try {
+    if (isOnline()) {
+      const { data, error } = await supabase
+        .from('user_progress')
+        .select('subtopic_id, completed')
+        .eq('user_id', userId);
 
-  if (error) throw error;
-  return data || [];
+      if (error) throw error;
+
+      const result = data || [];
+      cacheData('progress', result.map((r) => ({ ...r, id: r.subtopic_id })));
+      return result;
+    }
+
+    // Offline: use cached data
+    const cached = await getCachedData('progress');
+    return cached.map((r) => ({ subtopic_id: r.id, completed: r.completed }));
+  } catch (err) {
+    console.error('fetchUserProgress error:', err);
+    const cached = await getCachedData('progress');
+    return cached.map((r) => ({ subtopic_id: r.id, completed: r.completed }));
+  }
 }
 
 export async function upsertProgress(userId, subtopicId, completed) {
@@ -19,7 +35,11 @@ export async function upsertProgress(userId, subtopicId, completed) {
     completed_at: completed ? now : null,
     updated_at: now,
   };
-  console.log('Upserting user_progress:', JSON.stringify(payload, null, 2));
+
+  // Cache locally for offline
+  await cacheData('progress', { id: subtopicId, subtopic_id: subtopicId, completed });
+
+  if (!isOnline()) return;
 
   const { error } = await supabase
     .from('user_progress')
@@ -29,5 +49,4 @@ export async function upsertProgress(userId, subtopicId, completed) {
     console.error('user_progress upsert error:', error);
     throw error;
   }
-  console.log('user_progress upsert succeeded');
 }

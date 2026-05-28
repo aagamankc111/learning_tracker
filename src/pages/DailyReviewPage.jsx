@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { dailyReviewEssentials, quickReferenceStatusCodes, quickReferencePorts } from '../data/curriculum';
+import { dailyReviewEssentials, quickReferenceStatusCodes, quickReferencePorts, practiceResources } from '../data/curriculum';
 import FadeIn from '../components/common/FadeIn';
 
 const categories = [
@@ -7,6 +7,7 @@ const categories = [
   { key: 'networking', label: 'Networking', icon: '🌐', color: 'blue' },
   { key: 'python', label: 'Python', icon: '🐍', color: 'yellow' },
   { key: 'k8s', label: 'Kubernetes', icon: '☸️', color: 'blue' },
+  { key: 'docker', label: 'Docker', icon: '🐳', color: 'blue' },
 ];
 
 export default function DailyReviewPage() {
@@ -139,6 +140,29 @@ export default function DailyReviewPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </FadeIn>
+
+      {/* Practice Resources Quick Links */}
+      <FadeIn delay={650}>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-5 py-3 border-b border-gray-50 flex items-center justify-between">
+            <h3 className="font-semibold text-gray-800 text-sm">🎯 Practice Resources</h3>
+            <Link to="/practice" className="text-xs text-indigo-600 hover:underline font-medium">View all →</Link>
+          </div>
+          <div className="p-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
+            {Object.entries(practiceResources).slice(0, 4).map(([key, cat]) => (
+              <a key={key} href={cat.sites[0].url} target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition text-sm">
+                <span>{cat.icon}</span>
+                <span className="text-gray-700 font-medium">{cat.title}</span>
+                <span className="text-xs text-indigo-500 ml-auto">Practice →</span>
+              </a>
+            ))}
+          </div>
+          <div className="px-5 py-2 border-t border-gray-50 bg-gray-50 text-xs text-gray-400">
+            🆕 New: OverTheWire Bandit for Linux, TryHackMe for Security, Play with K8s for Kubernetes
           </div>
         </div>
       </FadeIn>

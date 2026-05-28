@@ -1,13 +1,13 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTopics } from '../../hooks/useTopics';
 import { useProgress } from '../../hooks/useProgress';
 import Header from '../Layout/Header';
 import ProgressBar from './ProgressBar';
 import TopicSection from './TopicSection';
+import DailyTracker from './DailyTracker';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingSpinner from '../common/LoadingSpinner';
-import Toast from '../common/Toast';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -17,8 +17,6 @@ export default function Dashboard() {
     loadProgress, toggleProgress, getOverallProgress,
   } = useProgress(user?.id);
 
-  const [toastMsg, setToastMsg] = useState('');
-  const [toastVisible, setToastVisible] = useState(false);
   const pendingRef = useRef({});
 
   useEffect(() => {
@@ -31,16 +29,10 @@ export default function Dashboard() {
   const handleToggle = useCallback(async (subtopicId, completed) => {
     if (pendingRef.current[subtopicId]) return;
     pendingRef.current[subtopicId] = true;
-
-    setToastVisible(false);
-
     try {
       await toggleProgress(subtopicId, completed);
-      setToastMsg(completed ? 'Marked as learned' : 'Marked as not learned');
-      setToastVisible(true);
     } catch {
-      setToastMsg('Failed to save. Check your connection.');
-      setToastVisible(true);
+      /* silently handle error */
     } finally {
       delete pendingRef.current[subtopicId];
     }
@@ -60,7 +52,6 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header email={user?.email} />
-
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-6 space-y-6">
         <ErrorMessage message={topicsError} onRetry={refetch} />
 
@@ -70,6 +61,7 @@ export default function Dashboard() {
           </div>
         )}
 
+        <DailyTracker userId={user?.id} completed={completed} total={total} />
         <ProgressBar completed={completed} total={total} />
 
         <div className="space-y-3">
@@ -83,8 +75,6 @@ export default function Dashboard() {
           ))}
         </div>
       </main>
-
-      <Toast message={toastMsg} visible={toastVisible} />
     </div>
   );
 }

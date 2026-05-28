@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { fetchUserProgress, upsertProgress } from '../services/progressService';
 import { calculateProgress } from '../utils/helpers';
 
@@ -23,6 +23,10 @@ export function useProgress(userId) {
       setLoading(false);
     }
   }, [userId]);
+
+  useEffect(() => {
+    if (userId) loadProgress();
+  }, [userId, loadProgress]);
 
   const toggleProgress = useCallback(async (subtopicId, completed) => {
     if (!userId) return;

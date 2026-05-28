@@ -8,7 +8,12 @@ const navItems = [
   { to: '/week/4', label: 'Week 4 — Portfolio', icon: '🚀' },
   { to: '/projects', label: 'Projects', icon: '🏗️' },
   { to: '/daily-review', label: 'Daily Review', icon: '📝' },
-  { to: '/industry-insights', label: 'Industry Insights', icon: '📈' },
+  { to: '/practice', label: 'Practice Resources', icon: '🎯' },
+  { to: '/quiz', label: 'Quiz Generator', icon: '🧪' },
+  { to: '/reviews', label: 'Spaced Repetition', icon: '🔄' },
+  { to: '/notes', label: 'Notes & Snippets', icon: '📋' },
+  { to: '/analytics', label: 'Analytics', icon: '📈' },
+  { to: '/industry-insights', label: 'Industry Insights', icon: '💼' },
 ];
 
 export default function Sidebar({ open, onClose }) {

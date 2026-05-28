@@ -7,6 +7,11 @@ import WeekPage from './pages/WeekPage';
 import ProjectsPage from './pages/ProjectsPage';
 import DailyReviewPage from './pages/DailyReviewPage';
 import IndustryInsightsPage from './pages/IndustryInsightsPage';
+import PracticePage from './pages/PracticePage';
+import QuizPage from './pages/QuizPage';
+import ReviewsPage from './pages/ReviewsPage';
+import NotesPage from './pages/NotesPage';
+import AnalyticsPage from './pages/AnalyticsPage';
 import LoadingSpinner from './components/common/LoadingSpinner';
 
 function ProtectedRoutes() {
@@ -32,6 +37,11 @@ function ProtectedRoutes() {
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/daily-review" element={<DailyReviewPage />} />
         <Route path="/industry-insights" element={<IndustryInsightsPage />} />
+        <Route path="/practice" element={<PracticePage />} />
+        <Route path="/quiz" element={<QuizPage />} />
+        <Route path="/reviews" element={<ReviewsPage />} />
+        <Route path="/notes" element={<NotesPage />} />
+        <Route path="/analytics" element={<AnalyticsPage />} />
       </Routes>
     </PageLayout>
   );

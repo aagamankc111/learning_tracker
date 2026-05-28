@@ -629,6 +629,113 @@ export const dailyReviewEssentials = {
   ],
 };
 
+export const practiceResources = {
+  linux: {
+    title: 'Linux & Bash',
+    icon: '🐧',
+    color: 'indigo',
+    sites: [
+      { name: 'OverTheWire: Bandit', url: 'https://overthewire.org/wargames/bandit/', desc: 'Gamified Linux terminal challenges — start from level 0 and work up. Best beginner practice.' },
+      { name: 'Linux Journey', url: 'https://linuxjourney.com/', desc: 'Free interactive tutorials covering file system, permissions, processes, and more.' },
+      { name: 'picoCTF', url: 'https://picoctf.org/', desc: 'Capture the Flag with Linux command-line challenges. Great for hands-on practice.' },
+      { name: 'Command Challenge', url: 'https://cmdchallenge.com/', desc: 'Short bash challenges that test your command-line skills. Quick daily practice.' },
+      { name: 'KDACT: Bash Scripting', url: 'https://www.learnshell.org/', desc: 'Interactive shell scripting tutorial in your browser.' },
+    ],
+  },
+  networking: {
+    title: 'Networking',
+    icon: '🌐',
+    color: 'blue',
+    sites: [
+      { name: 'Cisco Packet Tracer', url: 'https://www.netacad.com/courses/packet-tracer', desc: 'Free network simulation tool from Cisco. Build and test networks visually.' },
+      { name: 'Wireshark Practice', url: 'https://wiki.wireshark.org/SampleCaptures', desc: 'Download real network captures and practice analyzing packets.' },
+      { name: 'Subnetting Practice', url: 'https://subnettingpractice.com/', desc: 'Free subnetting exercises with instant feedback. Critical for networking interviews.' },
+      { name: 'TryHackMe: Network Fundamentals', url: 'https://tryhackme.com/module/network-fundamentals', desc: 'Interactive networking labs covering OSI, TCP/IP, DNS, and HTTP.' },
+      { name: 'DNS Checker Tools', url: 'https://dnschecker.org/', desc: 'Test DNS resolution, check records, and verify propagation across global servers.' },
+    ],
+  },
+  python: {
+    title: 'Python',
+    icon: '🐍',
+    color: 'yellow',
+    sites: [
+      { name: 'LeetCode', url: 'https://leetcode.com/', desc: '400+ Python coding problems sorted by difficulty. Essential for technical interviews.' },
+      { name: 'HackerRank Python', url: 'https://www.hackerrank.com/domains/python', desc: 'Structured Python challenges from basic to advanced. Tracks your progress.' },
+      { name: 'Real Python', url: 'https://realpython.com/', desc: 'In-depth Python tutorials with code examples. Best for practical learning.' },
+      { name: 'Python Tips', url: 'https://www.pythontutorial.net/', desc: 'Free Python tutorial from basics to advanced topics with interactive code.' },
+      { name: 'PyBites', url: 'https://codechalleng.es/', desc: 'Python code challenges and bite-sized exercises with community reviews.' },
+    ],
+  },
+  git: {
+    title: 'Git & GitHub',
+    icon: '🔀',
+    color: 'orange',
+    sites: [
+      { name: 'Learn Git Branching', url: 'https://learngitbranching.js.org/', desc: 'Visual, interactive Git tutorial. Master branching, merging, rebasing with instant feedback.' },
+      { name: 'GitHub Skills', url: 'https://skills.github.com/', desc: 'Official GitHub interactive courses — PRs, Actions, Markdown, and more.' },
+      { name: 'Oh My Git!', url: 'https://ohmygit.org/', desc: 'Open-source Git learning game. Fun way to understand Git internals.' },
+      { name: 'Git Immersion', url: 'https://gitimmersion.com/', desc: 'Step-by-step Git tutorial with 50+ hands-on labs. Great for deep understanding.' },
+    ],
+  },
+  docker: {
+    title: 'Docker',
+    icon: '🐳',
+    color: 'blue',
+    sites: [
+      { name: 'Play with Docker', url: 'https://labs.play-with-docker.com/', desc: 'Free Docker playground in your browser. No installation needed.' },
+      { name: 'DockerLabs', url: 'https://dockerlabs.collabnix.com/', desc: '250+ hands-on Docker exercises from beginner to advanced.' },
+      { name: 'Katacoda Docker Scenarios', url: 'https://www.katacoda.com/courses/docker', desc: 'Interactive Docker scenarios covering images, containers, Compose, and Swarm.' },
+      { name: 'Docker Curriculum', url: 'https://docker-curriculum.com/', desc: 'Comprehensive Docker tutorial with real-world examples and best practices.' },
+    ],
+  },
+  kubernetes: {
+    title: 'Kubernetes',
+    icon: '☸️',
+    color: 'violet',
+    sites: [
+      { name: 'Play with K8s', url: 'https://labs.play-with-k8s.com/', desc: 'Free Kubernetes cluster in your browser. Create pods, deployments, services instantly.' },
+      { name: 'KillerCoda K8s Scenarios', url: 'https://killercoda.com/killer-shell-ckad', desc: 'Free K8s scenarios for CKAD exam prep. Real cluster environment.' },
+      { name: 'K8s Official Tutorials', url: 'https://kubernetes.io/docs/tutorials/', desc: 'Kubernetes official interactive tutorials. Learn Pods, Deployments, Services, and ConfigMaps.' },
+      { name: 'KodeKloud K8s', url: 'https://kodekloud.com/courses/kubernetes-for-the-beginners/', desc: 'Hands-on K8s labs with real clusters. Free beginner course available.' },
+    ],
+  },
+  aws: {
+    title: 'AWS Cloud',
+    icon: '☁️',
+    color: 'orange',
+    sites: [
+      { name: 'AWS Free Tier', url: 'https://aws.amazon.com/free/', desc: '100+ services free for 12 months. Build real infrastructure at no cost.' },
+      { name: 'AWS Workshops', url: 'https://workshops.aws/', desc: 'Free, self-paced workshops for every AWS service. Step-by-step labs.' },
+      { name: 'Qwiklabs AWS', url: 'https://www.qwiklabs.com/catalog?locale=en&keyword=aws', desc: 'Hands-on AWS labs in real environments. Some free labs available.' },
+      { name: 'AWS Ramp-Up Guides', url: 'https://aws.amazon.com/training/ramp-up-guides/', desc: 'Official AWS learning paths for every role — Solutions Architect, DevOps, ML.' },
+    ],
+  },
+  mlops: {
+    title: 'MLOps & AI',
+    icon: '🤖',
+    color: 'violet',
+    sites: [
+      { name: 'Kaggle', url: 'https://www.kaggle.com/', desc: 'Free ML datasets, notebooks, competitions, and GPU access. The #1 ML practice platform.' },
+      { name: 'Fast.ai', url: 'https://www.fast.ai/', desc: 'Free practical deep learning course. Top-down approach, build models from Day 1.' },
+      { name: 'Hugging Face Learn', url: 'https://huggingface.co/learn', desc: 'Free NLP, Transformers, and LLM courses from the leading AI platform.' },
+      { name: 'MLflow Docs', url: 'https://mlflow.org/docs/latest/index.html', desc: 'Official MLflow docs with quickstart tutorials for experiment tracking and model registry.' },
+      { name: 'Weights & Biases', url: 'https://wandb.ai/site', desc: 'Free ML experiment tracking. Visualize metrics, compare runs, collaborate.' },
+    ],
+  },
+  security: {
+    title: 'Security',
+    icon: '🔒',
+    color: 'red',
+    sites: [
+      { name: 'TryHackMe', url: 'https://tryhackme.com/', desc: 'Gamified cybersecurity training. Free rooms for Linux, networking, and web security.' },
+      { name: 'Hack The Box', url: 'https://www.hackthebox.com/', desc: 'Realistic hacking challenges. Start with Starting Point for beginners.' },
+      { name: 'OWASP Top 10', url: 'https://owasp.org/www-project-top-ten/', desc: 'The definitive web application security risk list. Must-know for every engineer.' },
+      { name: 'PicoCTF', url: 'https://picoctf.org/', desc: 'Free CTF challenges. Covers cryptography, web exploitation, binary, and forensics.' },
+      { name: 'Hacker101', url: 'https://www.hacker101.com/', desc: 'Free web security training by HackerOne. CTF challenges included.' },
+    ],
+  },
+};
+
 export const quickReferenceStatusCodes = [
   { code: 200, label: 'OK', meaning: 'Success — standard response' },
   { code: 201, label: 'Created', meaning: 'Resource created (POST)' },

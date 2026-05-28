@@ -70,6 +70,7 @@ export default function WeekPage() {
 
       try {
         const { data: { user } } = await supabase.auth.getSession();
+        console.log('WeekPage load - session user:', user?.id);
         if (user) {
           const { data, error } = await supabase
             .from('daily_progress')
@@ -77,8 +78,12 @@ export default function WeekPage() {
             .eq('user_id', user.id)
             .eq('week_number', week.id);
 
-          if (error) throw error;
+          if (error) {
+            console.error('Supabase load error:', error);
+            throw error;
+          }
 
+          console.log('Supabase load - daily_progress rows:', data?.length || 0);
           if (data) {
             for (const row of data) {
               if (row.completed) {
@@ -86,6 +91,8 @@ export default function WeekPage() {
               }
             }
           }
+        } else {
+          console.warn('No user session found during load');
         }
       } catch (err) {
         console.warn('Supabase load failed, using localStorage:', err.message);
@@ -134,7 +141,7 @@ export default function WeekPage() {
     if (user) {
       setSyncing(true);
       try {
-        const { error } = await supabase.from('daily_progress').upsert(
+        const { data: upsertData, error } = await supabase.from('daily_progress').upsert(
           {
             user_id: user.id,
             week_number: week.id,
@@ -145,11 +152,15 @@ export default function WeekPage() {
           },
           { onConflict: 'user_id, week_number, day, item_index' }
         );
-        if (error) throw error;
-        showNotification(newCompleted ? '✓ Saved' : '✓ Updated', 'success');
+        if (error) {
+          console.error('Supabase upsert error details:', error);
+          throw error;
+        }
+        console.log('Supabase save success:', { week: week.id, day: day.day, index, completed: newCompleted });
+        showNotification(newCompleted ? '✓ Saved to cloud' : '✓ Updated', 'success');
       } catch (err) {
         console.error('Failed to sync to Supabase:', err);
-        showNotification('✗ Save failed. Check your connection.', 'error');
+        showNotification(`✗ Cloud save failed: ${err.message || 'Check connection'}`, 'error');
         // Rollback optimistic update
         setCheckedMap((prev) => {
           const rolledBack = { ...prev, [key]: !newCompleted };
@@ -160,7 +171,7 @@ export default function WeekPage() {
         setSyncing(false);
       }
     } else {
-      showNotification('Saved locally (offline mode)', 'warning');
+      showNotification('Saved locally (no active session)', 'warning');
     }
   }, [week?.id]);
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../config/supabase';
 import curriculum from '../data/curriculum';
@@ -33,11 +33,33 @@ function getStorageKey(weekId, day) {
   return `${STORAGE_PREFIX}_week${weekId}_day${day}`;
 }
 
+function updateLocalStorage(weekId, day, checkedMap) {
+  // Build the day's data from the full checkedMap
+  const dayData = {};
+  for (const [key, val] of Object.entries(checkedMap)) {
+    if (key.startsWith(`${day}-`)) {
+      dayData[key] = val;
+    }
+  }
+  localStorage.setItem(
+    getStorageKey(weekId, day),
+    JSON.stringify(dayData)
+  );
+}
+
 export default function WeekPage() {
   const { weekId } = useParams();
   const week = curriculum.weeks.find((w) => w.id === Number(weekId));
   const [checkedMap, setCheckedMap] = useState({});
   const [syncing, setSyncing] = useState(false);
+  const [notification, setNotification] = useState(null);
+  const notifTimer = useRef(null);
+
+  function showNotification(msg, type) {
+    if (notifTimer.current) clearTimeout(notifTimer.current);
+    setNotification({ msg, type });
+    notifTimer.current = setTimeout(() => setNotification(null), 3000);
+  }
 
   // Load: try Supabase first, fall back to localStorage
   useEffect(() => {
@@ -46,21 +68,28 @@ export default function WeekPage() {
     async function load() {
       const map = {};
 
-      const { data: { user } } = await supabase.auth.getSession();
-      if (user) {
-        const { data } = await supabase
-          .from('daily_progress')
-          .select('day, item_index, completed')
-          .eq('user_id', user.id)
-          .eq('week_number', week.id);
+      try {
+        const { data: { user } } = await supabase.auth.getSession();
+        if (user) {
+          const { data, error } = await supabase
+            .from('daily_progress')
+            .select('day, item_index, completed')
+            .eq('user_id', user.id)
+            .eq('week_number', week.id);
 
-        if (data) {
-          for (const row of data) {
-            if (row.completed) {
-              map[`${row.day}-${row.item_index}`] = true;
+          if (error) throw error;
+
+          if (data) {
+            for (const row of data) {
+              if (row.completed) {
+                map[`${row.day}-${row.item_index}`] = true;
+              }
             }
           }
         }
+      } catch (err) {
+        console.warn('Supabase load failed, using localStorage:', err.message);
+        showNotification('Progress could not be synced from server. Using local data.', 'warning');
       }
 
       // Merge with localStorage as fallback
@@ -82,24 +111,30 @@ export default function WeekPage() {
     }
 
     load();
-  }, [week?.id, week?.days]);
+  }, [week?.id]);
+
+  const checkedMapRef = useRef(checkedMap);
+  checkedMapRef.current = checkedMap;
 
   const handleCheck = useCallback(async (day, index) => {
     const key = `${day.day}-${index}`;
-    const newCompleted = !checkedMap[key];
+    const currentMap = checkedMapRef.current;
+    const newCompleted = !currentMap[key];
 
     // Optimistic update
-    setCheckedMap((prev) => ({ ...prev, [key]: newCompleted }));
-    localStorage.setItem(
-      getStorageKey(week.id, day.day),
-      JSON.stringify({ ...checkedMap, [key]: newCompleted })
-    );
+    setCheckedMap((prev) => {
+      const updated = { ...prev, [key]: newCompleted };
+      // Save to localStorage using the latest state
+      updateLocalStorage(week.id, day.day, updated);
+      return updated;
+    });
 
     // Persist to Supabase
     const { data: { user } } = await supabase.auth.getSession();
     if (user) {
+      setSyncing(true);
       try {
-        await supabase.from('daily_progress').upsert(
+        const { error } = await supabase.from('daily_progress').upsert(
           {
             user_id: user.id,
             week_number: week.id,
@@ -110,11 +145,24 @@ export default function WeekPage() {
           },
           { onConflict: 'user_id, week_number, day, item_index' }
         );
+        if (error) throw error;
+        showNotification(newCompleted ? '✓ Saved' : '✓ Updated', 'success');
       } catch (err) {
         console.error('Failed to sync to Supabase:', err);
+        showNotification('✗ Save failed. Check your connection.', 'error');
+        // Rollback optimistic update
+        setCheckedMap((prev) => {
+          const rolledBack = { ...prev, [key]: !newCompleted };
+          updateLocalStorage(week.id, day.day, rolledBack);
+          return rolledBack;
+        });
+      } finally {
+        setSyncing(false);
       }
+    } else {
+      showNotification('Saved locally (offline mode)', 'warning');
     }
-  }, [week?.id, checkedMap]);
+  }, [week?.id]);
 
   if (!week) {
     return (
@@ -130,7 +178,19 @@ export default function WeekPage() {
   const checkedCount = week.days.reduce((s, d) => s + d.reviewItems.filter((_, i) => checkedMap[`${d.day}-${i}`]).length, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Notification Toast */}
+      {notification && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-2.5 rounded-lg shadow-lg text-sm transition-all duration-300 ${
+          notification.type === 'success' ? 'bg-emerald-600 text-white' :
+          notification.type === 'error' ? 'bg-red-600 text-white' :
+          'bg-amber-500 text-white'
+        }`}>
+          {notification.msg}
+          {syncing && <span className="ml-2 inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+        </div>
+      )}
+
       {/* Week Header */}
       <FadeIn>
         <div className={`bg-gradient-to-r ${style.gradient} rounded-2xl p-6 sm:p-8 text-white shadow-xl`}>

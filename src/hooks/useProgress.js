@@ -17,6 +17,8 @@ export function useProgress(userId) {
         map[p.subtopic_id] = p.completed;
       }
       setProgressMap(map);
+    } catch (err) {
+      console.error('Failed to load progress:', err);
     } finally {
       setLoading(false);
     }
@@ -32,9 +34,10 @@ export function useProgress(userId) {
 
     try {
       await upsertProgress(userId, subtopicId, completed);
-    } catch {
+    } catch (err) {
+      console.error('ToggleProgress error:', err);
       setProgressMap((prev) => ({ ...prev, [subtopicId]: !completed }));
-      throw new Error('Failed to save progress to cloud');
+      throw err;
     } finally {
       delete pendingRef.current[subtopicId];
     }

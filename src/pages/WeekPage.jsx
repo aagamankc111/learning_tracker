@@ -69,7 +69,8 @@ export default function WeekPage() {
       const map = {};
 
       try {
-        const { data: { user } } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
+        const user = session?.user;
         console.log('WeekPage load - session user:', user?.id);
         if (user) {
           const { data, error } = await supabase
@@ -137,29 +138,35 @@ export default function WeekPage() {
     });
 
     // Persist to Supabase
-    const { data: { user } } = await supabase.auth.getSession();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
     if (user) {
       setSyncing(true);
       try {
-        const { data: upsertData, error } = await supabase.from('daily_progress').upsert(
-          {
-            user_id: user.id,
-            week_number: week.id,
-            day: day.day,
-            item_index: index,
-            completed: newCompleted,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: 'user_id, week_number, day, item_index' }
-        );
+        const payload = {
+          user_id: user.id,
+          week_number: week.id,
+          day: day.day,
+          item_index: index,
+          completed: newCompleted,
+          updated_at: new Date().toISOString(),
+        };
+        console.log('Upserting daily_progress:', JSON.stringify(payload, null, 2));
+
+        const { data: upsertData, error } = await supabase
+          .from('daily_progress')
+          .upsert(payload, { onConflict: 'user_id,week_number,day,item_index' });
+
         if (error) {
           console.error('Supabase upsert error details:', error);
+          window.alert('Supabase upsert failed: ' + JSON.stringify(error));
           throw error;
         }
         console.log('Supabase save success:', { week: week.id, day: day.day, index, completed: newCompleted });
         showNotification(newCompleted ? '✓ Saved to cloud' : '✓ Updated', 'success');
       } catch (err) {
         console.error('Failed to sync to Supabase:', err);
+        window.alert('Cloud save failed: ' + (err.message || err.details || JSON.stringify(err)));
         showNotification(`✗ Cloud save failed: ${err.message || 'Check connection'}`, 'error');
         // Rollback optimistic update
         setCheckedMap((prev) => {

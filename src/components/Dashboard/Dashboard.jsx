@@ -38,6 +38,9 @@ export default function Dashboard() {
       await toggleProgress(subtopicId, completed);
       setToastMsg(completed ? 'Marked as learned' : 'Marked as not learned');
       setToastVisible(true);
+    } catch {
+      setToastMsg('Failed to save. Check your connection.');
+      setToastVisible(true);
     } finally {
       delete pendingRef.current[subtopicId];
     }

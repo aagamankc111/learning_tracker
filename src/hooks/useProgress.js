@@ -34,6 +34,7 @@ export function useProgress(userId) {
       await upsertProgress(userId, subtopicId, completed);
     } catch {
       setProgressMap((prev) => ({ ...prev, [subtopicId]: !completed }));
+      throw new Error('Failed to save progress to cloud');
     } finally {
       delete pendingRef.current[subtopicId];
     }

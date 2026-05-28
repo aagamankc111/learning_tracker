@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { supabase } from '../config/supabase';
 import curriculum from '../data/curriculum';
 import FadeIn from '../components/common/FadeIn';
 
@@ -26,36 +27,94 @@ const weekStyles = {
   },
 };
 
+const STORAGE_PREFIX = 'wt_progress';
+
 function getStorageKey(weekId, day) {
-  return `wt_week${weekId}_day${day}`;
+  return `${STORAGE_PREFIX}_week${weekId}_day${day}`;
 }
 
 export default function WeekPage() {
   const { weekId } = useParams();
   const week = curriculum.weeks.find((w) => w.id === Number(weekId));
   const [checkedMap, setCheckedMap] = useState({});
+  const [syncing, setSyncing] = useState(false);
 
+  // Load: try Supabase first, fall back to localStorage
   useEffect(() => {
-    const map = {};
-    if (week) {
+    if (!week) return;
+
+    async function load() {
+      const map = {};
+
+      const { data: { user } } = await supabase.auth.getSession();
+      if (user) {
+        const { data } = await supabase
+          .from('daily_progress')
+          .select('day, item_index, completed')
+          .eq('user_id', user.id)
+          .eq('week_number', week.id);
+
+        if (data) {
+          for (const row of data) {
+            if (row.completed) {
+              map[`${row.day}-${row.item_index}`] = true;
+            }
+          }
+        }
+      }
+
+      // Merge with localStorage as fallback
       for (const day of week.days) {
         const stored = localStorage.getItem(getStorageKey(week.id, day.day));
         if (stored) {
-          try { Object.assign(map, JSON.parse(stored)); } catch {}
+          try {
+            const local = JSON.parse(stored);
+            for (const key of Object.keys(local)) {
+              if (!(key in map)) {
+                map[key] = local[key];
+              }
+            }
+          } catch {}
         }
       }
+
+      setCheckedMap(map);
     }
-    setCheckedMap(map);
+
+    load();
   }, [week?.id, week?.days]);
 
-  const handleCheck = useCallback((day, index) => {
+  const handleCheck = useCallback(async (day, index) => {
     const key = `${day.day}-${index}`;
-    setCheckedMap((prev) => {
-      const next = { ...prev, [key]: !prev[key] };
-      localStorage.setItem(getStorageKey(week.id, day), JSON.stringify(next));
-      return next;
-    });
-  }, [week?.id]);
+    const newCompleted = !checkedMap[key];
+
+    // Optimistic update
+    setCheckedMap((prev) => ({ ...prev, [key]: newCompleted }));
+    localStorage.setItem(
+      getStorageKey(week.id, day.day),
+      JSON.stringify({ ...checkedMap, [key]: newCompleted })
+    );
+
+    // Persist to Supabase
+    const { data: { user } } = await supabase.auth.getSession();
+    if (user) {
+      try {
+        await supabase.from('daily_progress').upsert(
+          {
+            user_id: user.id,
+            week_number: week.id,
+            day: day.day,
+            item_index: index,
+            completed: newCompleted,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id, week_number, day, item_index' }
+        );
+      } catch (err) {
+        console.error('Failed to sync to Supabase:', err);
+      }
+    }
+  }, [week?.id, checkedMap]);
 
   if (!week) {
     return (
@@ -67,7 +126,6 @@ export default function WeekPage() {
   }
 
   const style = weekStyles[week.color];
-
   const totalItems = week.days.reduce((s, d) => s + d.reviewItems.length, 0);
   const checkedCount = week.days.reduce((s, d) => s + d.reviewItems.filter((_, i) => checkedMap[`${d.day}-${i}`]).length, 0);
 
@@ -93,7 +151,6 @@ export default function WeekPage() {
             <span className="text-3xl sm:text-4xl opacity-70">{['🖥️', '☁️', '🤖', '🚀'][week.id - 1]}</span>
           </div>
 
-          {/* Week Progress */}
           <div className="mt-5">
             <div className="flex items-center gap-3">
               <div className="flex-1 bg-white/20 rounded-full h-2 overflow-hidden">

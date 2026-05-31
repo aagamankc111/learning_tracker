@@ -40,42 +40,42 @@ export default function ProjectsPage() {
       <div className="space-y-6">
         {majorProjects.map((project, i) => (
           <FadeIn key={project.id} delay={i * 150}>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all">
+            <div className="bg-white dark:bg-dark-800 rounded-xl shadow-sm border border-gray-100 dark:border-dark-700 overflow-hidden hover:shadow-md transition-all">
               <div className="p-6">
                 <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
                   <div>
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${difficultyColors[project.difficulty] || 'bg-gray-100 text-gray-600'}`}>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${difficultyColors[project.difficulty] || 'bg-gray-100 dark:bg-dark-700 text-gray-600 dark:text-gray-300'}`}>
                         {project.difficulty}
                       </span>
-                      <span className="text-xs text-gray-400">{project.days}</span>
-                      <span className="text-xs text-gray-400">{project.impact}</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">{project.days}</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">{project.impact}</span>
                     </div>
-                    <h2 className="text-xl font-bold text-gray-800">{project.title}</h2>
-                    <p className="text-sm text-indigo-600 font-medium">{project.subtitle}</p>
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">{project.title}</h2>
+                    <p className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">{project.subtitle}</p>
                   </div>
                   <div className="text-right">
                     <span className="text-3xl block">{['🤖', '🏗️', '🔒'][i]}</span>
-                    <span className="text-xs font-bold text-emerald-600">{project.salary}</span>
+                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{project.salary}</span>
                   </div>
                 </div>
 
-                <p className="text-sm text-gray-600 leading-relaxed mb-4">{project.description}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-4">{project.description}</p>
 
                 <div className="flex flex-wrap gap-1.5 mb-4">
                   {project.tech.map((t) => (
-                    <span key={t} className="px-2.5 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
+                    <span key={t} className="px-2.5 py-1 bg-gray-100 dark:bg-dark-700 text-gray-600 dark:text-gray-300 text-xs font-medium rounded-full">
                       {t}
                     </span>
                   ))}
                 </div>
 
                 <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Key Highlights</p>
+                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Key Highlights</p>
                   <ul className="space-y-1.5">
                     {project.highlights.map((h, j) => (
-                      <li key={j} className="flex items-start gap-2 text-sm text-gray-600">
-                        <svg className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <li key={j} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300">
+                        <svg className="w-4 h-4 text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
                         {h}
@@ -91,22 +91,22 @@ export default function ProjectsPage() {
 
       {/* Top Skills These Projects Build */}
       <FadeIn delay={500}>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-lg font-bold text-gray-800 mb-4">🎯 Skills These Projects Prove</h2>
+        <div className="bg-white dark:bg-dark-800 rounded-xl shadow-sm border border-gray-100 dark:border-dark-700 p-6">
+          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">🎯 Skills These Projects Prove</h2>
           <div className="space-y-3">
             {industryInsights.topSkills.slice(0, 8).map((s) => (
               <div key={s.skill}>
                 <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="font-medium text-gray-700">{s.skill}</span>
-                  <span className="text-xs text-gray-400">{s.weight}% of top job postings</span>
+                  <span className="font-medium text-gray-700 dark:text-gray-200">{s.skill}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">{s.weight}% of top job postings</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-gray-200 dark:bg-dark-600 rounded-full h-2">
                   <div
                     className="h-full bg-indigo-500 rounded-full transition-all duration-700"
                     style={{ width: `${s.weight}%` }}
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-0.5">{s.description}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{s.description}</p>
               </div>
             ))}
           </div>

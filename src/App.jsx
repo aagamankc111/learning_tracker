@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { NotificationProvider } from './context/NotificationContext';
 import AuthForm from './components/Auth/AuthForm';
 import PageLayout from './components/Layout/PageLayout';
 import Home from './pages/Home';
@@ -11,7 +13,9 @@ import PracticePage from './pages/PracticePage';
 import QuizPage from './pages/QuizPage';
 import ReviewsPage from './pages/ReviewsPage';
 import NotesPage from './pages/NotesPage';
+import MotivationPage from './pages/MotivationPage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import TopicDetailPage from './pages/TopicDetailPage';
 import LoadingSpinner from './components/common/LoadingSpinner';
 
 function ProtectedRoutes() {
@@ -34,6 +38,7 @@ function ProtectedRoutes() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/week/:weekId" element={<WeekPage />} />
+        <Route path="/week/:weekId/day/:dayNumber/topic/:topicName" element={<TopicDetailPage />} />
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/daily-review" element={<DailyReviewPage />} />
         <Route path="/industry-insights" element={<IndustryInsightsPage />} />
@@ -41,6 +46,7 @@ function ProtectedRoutes() {
         <Route path="/quiz" element={<QuizPage />} />
         <Route path="/reviews" element={<ReviewsPage />} />
         <Route path="/notes" element={<NotesPage />} />
+        <Route path="/motivation" element={<MotivationPage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
       </Routes>
     </PageLayout>
@@ -77,9 +83,13 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
+      <ThemeProvider>
+        <NotificationProvider>
+          <AuthProvider>
+            <AppRoutes />
+          </AuthProvider>
+        </NotificationProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

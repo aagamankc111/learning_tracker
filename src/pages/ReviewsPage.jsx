@@ -73,47 +73,47 @@ export default function ReviewsPage() {
 
       {dueReviews.length === 0 && !finished && (
         <FadeIn delay={100}>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+          <div className="dark:bg-dark-800 dark:border-dark-700 bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
             <div className="text-5xl mb-4">🎉</div>
-            <h2 className="text-xl font-bold text-gray-800 mb-2">All caught up!</h2>
-            <p className="text-gray-500 text-sm mb-4">No reviews due right now. Check back later or mark more topics for review.</p>
-            <p className="text-xs text-gray-400">Tracked: {totalReviewCount} subtopics</p>
+            <h2 className="dark:text-gray-100 text-xl font-bold text-gray-800 mb-2">All caught up!</h2>
+            <p className="dark:text-gray-400 text-gray-500 text-sm mb-4">No reviews due right now. Check back later or mark more topics for review.</p>
+            <p className="dark:text-gray-500 text-xs text-gray-400">Tracked: {totalReviewCount} subtopics</p>
           </div>
         </FadeIn>
       )}
 
       {!finished && currentReview && (
         <FadeIn key={currentIndex}>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="dark:bg-dark-800 dark:border-dark-700 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <span className="dark:text-gray-400 text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Review {currentIndex + 1} of {dueReviews.length}
               </span>
-              <span className="text-xs text-blue-600 font-medium">
+              <span className="dark:text-blue-400 text-xs text-blue-600 font-medium">
                 Due: {currentReview.next_review_date}
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
-              <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${((currentIndex + 1) / dueReviews.length) * 100}%` }} />
+            <div className="w-full dark:bg-dark-600 bg-gray-200 rounded-full h-2 mb-6">
+              <div className="h-full dark:bg-blue-600 bg-blue-500 rounded-full transition-all" style={{ width: `${((currentIndex + 1) / dueReviews.length) * 100}%` }} />
             </div>
 
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+            <h3 className="dark:text-gray-100 text-lg font-semibold text-gray-800 mb-2">
               {currentReview.subtopic?.title || `Subtopic #${currentReview.subtopic_id}`}
             </h3>
             {currentReview.subtopic?.description && (
-              <p className="text-sm text-gray-500 mb-4">{currentReview.subtopic.description}</p>
+              <p className="dark:text-gray-400 text-sm text-gray-500 mb-4">{currentReview.subtopic.description}</p>
             )}
 
             {!showAnswer ? (
               <button
                 onClick={handleShowAnswer}
-                className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
+                className="w-full py-3 dark:bg-blue-700 dark:hover:bg-blue-800 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
               >
                 Show Answer / Rate Recall
               </button>
             ) : (
               <div>
-                <p className="text-sm font-medium text-gray-700 mb-3">How well did you remember?</p>
+                <p className="dark:text-gray-200 text-sm font-medium text-gray-700 mb-3">How well did you remember?</p>
                 <div className="grid sm:grid-cols-2 gap-2">
                   {QUALITY_LABELS.map((label, i) => (
                     <button
@@ -122,10 +122,10 @@ export default function ReviewsPage() {
                       disabled={completing}
                       className={`text-left p-3 rounded-lg border text-sm transition ${
                         i < 3
-                          ? 'border-red-200 hover:bg-red-50 text-red-700'
+                          ? 'dark:border-red-800 dark:hover:bg-red-900/20 dark:text-red-300 border-red-200 hover:bg-red-50 text-red-700'
                           : i < 5
-                          ? 'border-amber-200 hover:bg-amber-50 text-amber-700'
-                          : 'border-emerald-200 hover:bg-emerald-50 text-emerald-700'
+                          ? 'dark:border-amber-800 dark:hover:bg-amber-900/20 dark:text-amber-300 border-amber-200 hover:bg-amber-50 text-amber-700'
+                          : 'dark:border-emerald-800 dark:hover:bg-emerald-900/20 dark:text-emerald-300 border-emerald-200 hover:bg-emerald-50 text-emerald-700'
                       } disabled:opacity-50`}
                     >
                       {i} — {label}
@@ -135,7 +135,7 @@ export default function ReviewsPage() {
               </div>
             )}
 
-            <div className="flex items-center gap-2 mt-4 text-xs text-gray-400">
+            <div className="flex items-center gap-2 mt-4 dark:text-gray-500 text-xs text-gray-400">
               <span>Repetitions: {currentReview.repetitions}</span>
               <span>·</span>
               <span>Interval: {currentReview.interval_days}d</span>
@@ -148,13 +148,13 @@ export default function ReviewsPage() {
 
       {finished && (
         <FadeIn delay={100}>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center">
+          <div className="dark:bg-dark-800 dark:border-dark-700 bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center">
             <div className="text-5xl mb-4">✅</div>
-            <h2 className="text-xl font-bold text-gray-800 mb-2">Session Complete!</h2>
-            <p className="text-gray-500 text-sm mb-4">You reviewed {dueReviews.length} items.</p>
+            <h2 className="dark:text-gray-100 text-xl font-bold text-gray-800 mb-2">Session Complete!</h2>
+            <p className="dark:text-gray-400 text-gray-500 text-sm mb-4">You reviewed {dueReviews.length} items.</p>
             <button
               onClick={handleRestart}
-              className="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+              className="px-5 py-2 dark:bg-blue-700 dark:hover:bg-blue-800 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
             >
               Refresh & Check Again
             </button>

@@ -60,48 +60,6 @@ export async function getCachedData(storeName) {
   }
 }
 
-export async function getCachedItem(storeName, id) {
-  try {
-    const db = await openDB();
-    const tx = db.transaction(storeName, 'readonly');
-    const store = tx.objectStore(storeName);
-    const item = store.get(id);
-
-    return new Promise((resolve, reject) => {
-      item.onsuccess = () => resolve(item.result);
-      item.onerror = () => reject(item.error);
-    });
-  } catch (err) {
-    console.warn('IndexedDB read error:', err);
-    return null;
-  }
-}
-
-export async function clearStore(storeName) {
-  try {
-    const db = await openDB();
-    const tx = db.transaction(storeName, 'readwrite');
-    const store = tx.objectStore(storeName);
-    store.clear();
-    await new Promise((resolve, reject) => {
-      tx.oncomplete = resolve;
-      tx.onerror = () => reject(tx.error);
-    });
-  } catch (err) {
-    console.warn('IndexedDB clear error:', err);
-  }
-}
-
 export function isOnline() {
   return navigator.onLine;
-}
-
-export function onOnline(callback) {
-  window.addEventListener('online', callback);
-  return () => window.removeEventListener('online', callback);
-}
-
-export function onOffline(callback) {
-  window.addEventListener('offline', callback);
-  return () => window.removeEventListener('offline', callback);
 }

@@ -1,5 +1,6 @@
 import { practiceResources } from '../data/curriculum';
 import FadeIn from '../components/common/FadeIn';
+import MiniMotivationBar from '../components/Motivation/MiniMotivationBar';
 
 const colorMap = {
   indigo: { gradient: 'from-indigo-500 to-indigo-600', badge: 'bg-indigo-100 text-indigo-700', hover: 'hover:border-indigo-200' },
@@ -31,11 +32,13 @@ export default function PracticePage() {
         </div>
       </FadeIn>
 
+      <MiniMotivationBar compact />
+
       {categories.map(([key, cat], ci) => {
         const colors = colorMap[cat.color] || colorMap.indigo;
         return (
           <FadeIn key={key} delay={ci * 80}>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white dark:bg-dark-800 rounded-xl shadow-sm border border-gray-100 dark:border-dark-700 overflow-hidden">
               <div className={`bg-gradient-to-r ${colors.gradient} px-5 py-4 text-white`}>
                 <div className="flex items-center gap-2">
                   <span className="text-xl">{cat.icon}</span>
@@ -49,22 +52,22 @@ export default function PracticePage() {
                     href={site.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`block p-4 rounded-xl border border-gray-200 ${colors.hover} transition-all hover:shadow-md hover:-translate-y-0.5`}
+                    className={`block p-4 rounded-xl border border-gray-200 dark:border-dark-700 ${colors.hover} transition-all hover:shadow-md hover:-translate-y-0.5`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <h3 className="font-semibold text-gray-800 text-sm">{site.name}</h3>
-                          <svg className="w-3 h-3 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <h3 className="font-semibold text-gray-800 dark:text-gray-100 text-sm">{site.name}</h3>
+                          <svg className="w-3 h-3 text-gray-400 dark:text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                           </svg>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1 leading-relaxed">{site.desc}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">{site.desc}</p>
                       </div>
                     </div>
                     <div className="mt-2 flex items-center gap-1">
                       <span className={`inline-block w-2 h-2 rounded-full ${ci % 2 === 0 ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-                      <span className="text-xs text-gray-400">Hands-on practice</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">Hands-on practice</span>
                     </div>
                   </a>
                 ))}

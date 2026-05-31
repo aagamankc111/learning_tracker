@@ -2,7 +2,10 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../config/supabase';
 import curriculum from '../data/curriculum';
+import { hasEnrichment } from '../data/curriculum-enrichment';
 import FadeIn from '../components/common/FadeIn';
+import MiniMotivationBar from '../components/Motivation/MiniMotivationBar';
+import { useNotifications } from '../context/NotificationContext';
 
 const weekStyles = {
   indigo: {
@@ -24,6 +27,31 @@ const weekStyles = {
     gradient: 'from-amber-600 to-amber-700', badge: 'bg-amber-100 text-amber-700',
     count: 'text-amber-700', light: 'bg-amber-50', ring: 'ring-amber-500',
     btn: 'bg-amber-600 hover:bg-amber-700', accent: 'amber',
+  },
+  cyan: {
+    gradient: 'from-cyan-600 to-cyan-700', badge: 'bg-cyan-100 text-cyan-700',
+    count: 'text-cyan-700', light: 'bg-cyan-50', ring: 'ring-cyan-500',
+    btn: 'bg-cyan-600 hover:bg-cyan-700', accent: 'cyan',
+  },
+  rose: {
+    gradient: 'from-rose-600 to-rose-700', badge: 'bg-rose-100 text-rose-700',
+    count: 'text-rose-700', light: 'bg-rose-50', ring: 'ring-rose-500',
+    btn: 'bg-rose-600 hover:bg-rose-700', accent: 'rose',
+  },
+  teal: {
+    gradient: 'from-teal-600 to-teal-700', badge: 'bg-teal-100 text-teal-700',
+    count: 'text-teal-700', light: 'bg-teal-50', ring: 'ring-teal-500',
+    btn: 'bg-teal-600 hover:bg-teal-700', accent: 'teal',
+  },
+  pink: {
+    gradient: 'from-pink-600 to-pink-700', badge: 'bg-pink-100 text-pink-700',
+    count: 'text-pink-700', light: 'bg-pink-50', ring: 'ring-pink-500',
+    btn: 'bg-pink-600 hover:bg-pink-700', accent: 'pink',
+  },
+  purple: {
+    gradient: 'from-purple-600 to-purple-700', badge: 'bg-purple-100 text-purple-700',
+    count: 'text-purple-700', light: 'bg-purple-50', ring: 'ring-purple-500',
+    btn: 'bg-purple-600 hover:bg-purple-700', accent: 'purple',
   },
 };
 
@@ -50,6 +78,8 @@ export default function WeekPage() {
   const { weekId } = useParams();
   const week = curriculum.weeks.find((w) => w.id === Number(weekId));
   const [checkedMap, setCheckedMap] = useState({});
+  const [openDay, setOpenDay] = useState(null);
+  const dayRefs = useRef({});
 
   useEffect(() => {
     if (!week) return;
@@ -102,6 +132,24 @@ export default function WeekPage() {
     }
 
     load();
+
+    const handleHash = () => {
+      const hash = window.location.hash;
+      if (hash && hash.startsWith('#day-')) {
+        const dayNum = parseInt(hash.replace('#day-', ''), 10);
+        if (!isNaN(dayNum)) {
+          setOpenDay(dayNum);
+          setTimeout(() => {
+            const el = document.getElementById(`day-${dayNum}`);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 300);
+        }
+      }
+    };
+
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
   }, [week?.id]);
 
   const checkedMapRef = useRef(checkedMap);
@@ -117,6 +165,10 @@ export default function WeekPage() {
       updateLocalStorage(week.id, day.day, updated);
       return updated;
     });
+
+    if (newCompleted) {
+      notify('xp', { xp: 5, reason: `Completed: ${day.reviewItems[index]}`, totalXp: '...' });
+    }
 
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user;
@@ -150,12 +202,13 @@ export default function WeekPage() {
   if (!week) {
     return (
       <div className="text-center py-20">
-        <p className="text-gray-500">Week not found.</p>
-        <Link to="/" className="text-indigo-600 hover:underline mt-2 inline-block">← Back to Dashboard</Link>
+        <p className="text-gray-500 dark:text-gray-400">Week not found.</p>
+        <Link to="/" className="text-indigo-600 dark:text-indigo-400 hover:underline mt-2 inline-block">← Back to Dashboard</Link>
       </div>
     );
   }
 
+  const { notify } = useNotifications();
   const style = weekStyles[week.color];
   const totalItems = week.days.reduce((s, d) => s + d.reviewItems.length, 0);
   const checkedCount = week.days.reduce((s, d) => s + d.reviewItems.filter((_, i) => checkedMap[`${d.day}-${i}`]).length, 0);
@@ -169,7 +222,7 @@ export default function WeekPage() {
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-2">
                 <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${style.badge}`}>
-                  Week {week.id}
+                  Phase {week.id}
                 </span>
                 <span className="text-white/60 text-xs">
                   {checkedCount}/{totalItems} items checked
@@ -179,7 +232,7 @@ export default function WeekPage() {
               <p className="text-white/80 mt-1 text-sm">{week.subtitle}</p>
               <p className="text-white/60 text-sm mt-2 max-w-xl">{week.description}</p>
             </div>
-            <span className="text-3xl sm:text-4xl opacity-70">{['🖥️', '☁️', '🤖', '🚀'][week.id - 1]}</span>
+            <span className="text-3xl sm:text-4xl opacity-70">{['🖥️', '☁️', '🤖', '🚀', '🔬', '📐', '🏭', '🧠', '🏆'][week.id - 1]}</span>
           </div>
 
           <div className="mt-5">
@@ -197,9 +250,9 @@ export default function WeekPage() {
           </div>
 
           <div className="flex flex-wrap gap-3 mt-4">
-            <Link to={week.id < 4 ? `/week/${week.id + 1}` : '/projects'}
+            <Link to={week.id < 9 ? `/week/${week.id + 1}` : '/projects'}
               className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition text-white">
-              {week.id < 4 ? 'Next Week →' : 'View Projects →'}
+              {week.id < 9 ? 'Next Phase →' : 'View Projects →'}
             </Link>
             <Link to="/daily-review"
               className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition text-white border border-white/20">
@@ -209,9 +262,44 @@ export default function WeekPage() {
         </div>
       </FadeIn>
 
+      {/* Mini Motivation Bar */}
+      <FadeIn delay={80}>
+        <MiniMotivationBar compact />
+      </FadeIn>
+
+      {/* Quick Day Navigation */}
+      <div className="flex gap-1.5 flex-wrap">
+        {week.days.map((day) => {
+          const dayChecked = day.reviewItems.filter((_, j) => checkedMap[`${day.day}-${j}`]).length;
+          const dayTotal = day.reviewItems.length;
+          const done = dayChecked === dayTotal && dayTotal > 0;
+          return (
+            <button
+              key={day.day}
+              onClick={() => {
+                setOpenDay(day.day);
+                window.location.hash = `day-${day.day}`;
+                const el = document.getElementById(`day-${day.day}`);
+                if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+              }}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition border ${
+                openDay === day.day
+                  ? 'bg-indigo-100 text-indigo-700 border-indigo-300 shadow-sm dark:bg-indigo-900/40 dark:text-indigo-300'
+                  : done
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:bg-dark-800 dark:text-gray-300 dark:border-dark-600 dark:hover:border-dark-500 dark:hover:bg-dark-700'
+              }`}
+              title={`${day.title} (${dayChecked}/${dayTotal})`}
+            >
+              D{day.day}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Day-by-Day Breakdown */}
       <div className="space-y-4">
-        <h2 className="text-xl font-bold text-gray-800">Daily Breakdown</h2>
+        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Daily Breakdown</h2>
 
         {week.days.map((day, i) => {
           const dayChecked = day.reviewItems.filter((_, j) => checkedMap[`${day.day}-${j}`]).length;
@@ -219,40 +307,63 @@ export default function WeekPage() {
 
           return (
             <FadeIn key={day.day} delay={i * 75}>
-              <details className="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden open:shadow-md transition-all">
-                <summary className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-gray-50 transition select-none list-none">
+              <details
+                id={`day-${day.day}`}
+                ref={(el) => { dayRefs.current[day.day] = el; }}
+                open={openDay === day.day}
+                className="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden open:shadow-md transition-all dark:bg-dark-800 dark:border-dark-700"
+                onToggle={(e) => {
+                  if (e.target.open) setOpenDay(day.day);
+                }}
+              >
+                <summary className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-700 transition select-none list-none">
                   <div className="flex items-center gap-4 min-w-0">
                     <div className={`w-9 h-9 rounded-lg ${style.light} flex items-center justify-center shrink-0`}>
                       <span className={`text-xs font-bold ${style.count}`}>D{day.day}</span>
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-semibold text-gray-800 text-sm sm:text-base truncate">{day.title}</h3>
-                      <div className="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
-                        <span>{day.topics.join(' · ')}</span>
-                        <span className="text-gray-300">|</span>
+                      <h3 className="font-semibold text-gray-800 dark:text-gray-100 text-sm sm:text-base truncate">{day.title}</h3>
+                      <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                        <span className="flex flex-wrap gap-x-2 gap-y-0.5">
+                          {day.topics.map((t) => {
+                            const slug = t.toLowerCase().replace(/\s+/g, '-');
+                            const hasEnr = hasEnrichment(day.day, t);
+                            return (
+                              <Link
+                                key={t}
+                                to={`/week/${week.id}/day/${day.day}/topic/${slug}`}
+                                className={`transition ${hasEnr ? 'text-indigo-600 hover:text-indigo-800 hover:underline dark:text-indigo-400 dark:hover:text-indigo-300' : 'text-gray-400 dark:text-gray-500'}`}
+                                title={hasEnr ? 'View enrichment details' : 'No enrichment data'}
+                              >
+                                {t}{hasEnr ? ' 📖' : ''}
+                              </Link>
+                            );
+                          })}
+                        </span>
+                        <span className="text-gray-300 dark:text-gray-500">|</span>
                         <span className={dayChecked === dayTotal && dayTotal > 0 ? 'text-emerald-500 font-medium' : ''}>
                           {dayChecked}/{dayTotal}
                         </span>
                       </div>
                     </div>
                   </div>
-                  <svg className="w-5 h-5 text-gray-400 shrink-0 transition-transform duration-200 group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 shrink-0 transition-transform duration-200 group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                   </svg>
                 </summary>
 
-                <div className="px-5 pb-5 border-t border-gray-50">
+                <div className="px-5 pb-5 border-t border-gray-50 dark:border-dark-700/50">
                   {/* Key Concepts */}
                   <div className="mt-4">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Key Concepts</p>
-                    <div className={`p-3 rounded-lg ${style.light} text-sm text-gray-700 leading-relaxed`}>
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Key Concepts</p>
+                    <div className={`p-3 rounded-lg ${style.light} text-sm text-gray-700 dark:text-gray-200 leading-relaxed`}>
                       {day.keyConcepts}
                     </div>
                   </div>
 
                   {/* Review Items */}
                   <div className="mt-4">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Must-Know Checklist</p>
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Must-Know Checklist</p>
                     <div className="space-y-1.5">
                       {day.reviewItems.map((item, j) => {
                         const checked = checkedMap[`${day.day}-${j}`];
@@ -260,16 +371,16 @@ export default function WeekPage() {
                           <label
                             key={j}
                             className={`flex items-start gap-2.5 p-2 rounded-lg transition-all cursor-pointer group/check ${
-                              checked ? 'bg-emerald-50/50' : 'hover:bg-gray-50'
+                              checked ? 'bg-emerald-50/50 dark:bg-emerald-900/20' : 'hover:bg-gray-50 dark:hover:bg-dark-700'
                             }`}
                           >
                             <input
                               type="checkbox"
                               checked={!!checked}
                               onChange={() => handleCheck(day, j)}
-                              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 accent-emerald-600 cursor-pointer"
+                              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 accent-emerald-600 cursor-pointer dark:text-emerald-400"
                             />
-                            <span className={`text-sm transition-colors ${checked ? 'line-through text-gray-400' : 'text-gray-600'}`}>
+                            <span className={`text-sm transition-colors ${checked ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-600 dark:text-gray-300'}`}>
                               {item}
                             </span>
                           </label>
@@ -280,10 +391,10 @@ export default function WeekPage() {
 
                   {/* Key Commands */}
                   <div className="mt-4">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Key Commands</p>
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Key Commands</p>
                     <div className="grid sm:grid-cols-2 gap-2">
                       {day.keyCommands.map((cmd, j) => (
-                        <div key={j} className="bg-gray-900 text-green-400 text-xs font-mono px-3 py-2 rounded-lg overflow-x-auto">
+                        <div key={j} className="bg-gray-900 text-green-400 text-xs font-mono px-3 py-2 rounded-lg overflow-x-auto dark:bg-dark-900 dark:text-green-300">
                           $ {cmd}
                         </div>
                       ))}
@@ -292,8 +403,8 @@ export default function WeekPage() {
 
                   {/* Project Idea */}
                   <div className="mt-4">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Mini Project</p>
-                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Mini Project</p>
+                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800 dark:border-amber-800 dark:text-amber-300">
                       {day.projectIdeas}
                     </div>
                   </div>
@@ -305,25 +416,25 @@ export default function WeekPage() {
       </div>
 
       {/* Navigation between weeks */}
-      <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+      <div className="flex justify-between items-center pt-4 border-t border-gray-100 dark:border-dark-700">
         <div>
           {week.id > 1 ? (
             <Link to={`/week/${week.id - 1}`}
-              className="text-sm text-gray-500 hover:text-indigo-600 font-medium transition flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-gray-50">
-              ← Week {week.id - 1}
+              className="text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-700">
+              ← Phase {week.id - 1}
             </Link>
           ) : (
             <Link to="/"
-              className="text-sm text-gray-500 hover:text-indigo-600 font-medium transition flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-gray-50">
+              className="text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-700">
               ← Dashboard
             </Link>
           )}
         </div>
         <div>
-          {week.id < 4 ? (
+          {week.id < 9 ? (
             <Link to={`/week/${week.id + 1}`}
               className={`text-sm text-white font-medium px-4 py-2 rounded-lg transition shadow ${style.btn}`}>
-              Week {week.id + 1} →
+              Phase {week.id + 1} →
             </Link>
           ) : (
             <Link to="/projects"

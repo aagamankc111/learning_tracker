@@ -47,16 +47,6 @@ export async function awardAchievement(userId, achievementId) {
   if (error && error.code !== '23505') throw error;
 }
 
-const XP_PER_ITEM = 10;
-const XP_PER_QUIZ = 25;
-const XP_PER_REVIEW = 5;
-const XP_PER_STREAK_DAY = 5;
-
-export function calculateItemXp() { return XP_PER_ITEM; }
-export function calculateQuizXp() { return XP_PER_QUIZ; }
-export function calculateReviewXp() { return XP_PER_REVIEW; }
-export function calculateStreakDayXp() { return XP_PER_STREAK_DAY; }
-
 export function calculateLevel(totalXp) {
   return Math.floor(Math.sqrt(totalXp / 100)) + 1;
 }

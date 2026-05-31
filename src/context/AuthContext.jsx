@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { getCurrentSession, onAuthStateChange } from '../services/authService';
 
 const AuthContext = createContext(null);

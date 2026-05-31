@@ -103,13 +103,13 @@ export default function NotesPage() {
 
       {/* Add Note Form */}
       <FadeIn delay={50}>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-          <h2 className="text-lg font-bold text-gray-800 mb-4">{editingId ? 'Edit Note' : 'Add New Note'}</h2>
+        <div className="bg-white dark:bg-dark-800 rounded-xl shadow-sm border border-gray-100 dark:border-dark-700 p-5">
+          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">{editingId ? 'Edit Note' : 'Add New Note'}</h2>
           <div className="space-y-3">
             <select
               value={selectedSubtopic}
               onChange={(e) => setSelectedSubtopic(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-dark-600 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 outline-none dark:bg-dark-800 dark:text-gray-200"
             >
               <option value="">Select a subtopic...</option>
               {allSubtopics.map((s) => (
@@ -121,23 +121,23 @@ export default function NotesPage() {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder={isCodeSnippet ? 'Paste your code snippet here...' : 'Write your notes here...'}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 outline-none min-h-[120px] font-mono"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-dark-600 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 outline-none min-h-[120px] font-mono dark:bg-dark-800 dark:text-gray-200"
             />
 
             <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+              <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={isCodeSnippet}
                   onChange={(e) => setIsCodeSnippet(e.target.checked)}
-                  className="rounded border-gray-300 text-amber-600 focus:ring-amber-500 accent-amber-600"
+                  className="rounded border-gray-300 dark:border-dark-600 text-amber-600 focus:ring-amber-500 accent-amber-600"
                 />
                 This is a code snippet
               </label>
               <div className="flex-1" />
               {editingId && (
                 <button onClick={() => { setContent(''); setSelectedSubtopic(''); setIsCodeSnippet(false); setEditingId(null); }}
-                  className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700">
+                  className="px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
                   Cancel
                 </button>
               )}
@@ -156,13 +156,13 @@ export default function NotesPage() {
       {/* Code Snippets */}
       {codeNotes.length > 0 && (
         <FadeIn delay={100}>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <h2 className="text-lg font-bold text-gray-800 mb-4">📋 Code Snippets ({codeNotes.length})</h2>
+          <div className="bg-white dark:bg-dark-800 rounded-xl shadow-sm border border-gray-100 dark:border-dark-700 p-5">
+            <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">📋 Code Snippets ({codeNotes.length})</h2>
             <div className="space-y-3">
               {codeNotes.map((note) => (
-                <div key={note.id} className="bg-gray-900 rounded-lg p-4">
+                <div key={note.id} className="bg-gray-900 dark:bg-dark-900 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-gray-400 font-mono">
+                    <span className="text-xs text-gray-400 dark:text-gray-500 font-mono">
                       {note.subtopic?.title || `Subtopic #${note.subtopic_id}`}
                     </span>
                     <div className="flex gap-2">
@@ -182,7 +182,7 @@ export default function NotesPage() {
                       </button>
                     </div>
                   </div>
-                  <pre className="text-green-400 text-xs font-mono leading-relaxed overflow-x-auto whitespace-pre-wrap">
+                  <pre className="text-green-400 dark:text-green-300 text-xs font-mono leading-relaxed overflow-x-auto whitespace-pre-wrap">
                     {note.content}
                   </pre>
                 </div>
@@ -195,28 +195,28 @@ export default function NotesPage() {
       {/* Text Notes */}
       {textNotes.length > 0 && (
         <FadeIn delay={150}>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <h2 className="text-lg font-bold text-gray-800 mb-4">📝 Notes ({textNotes.length})</h2>
+          <div className="bg-white dark:bg-dark-800 rounded-xl shadow-sm border border-gray-100 dark:border-dark-700 p-5">
+            <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">📝 Notes ({textNotes.length})</h2>
             <div className="space-y-3">
               {textNotes.map((note) => (
-                <div key={note.id} className="border border-gray-200 rounded-lg p-4 hover:border-amber-200 transition">
+                <div key={note.id} className="border border-gray-200 dark:border-dark-700 rounded-lg p-4 hover:border-amber-200 dark:hover:border-amber-600 transition">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium text-amber-600">
+                    <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
                       {note.subtopic?.title || `Subtopic #${note.subtopic_id}`}
                     </span>
                     <div className="flex gap-2">
                       <button onClick={() => handleEdit(note)}
-                        className="text-xs text-indigo-500 hover:text-indigo-600 transition">
+                        className="text-xs text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition">
                         Edit
                       </button>
                       <button onClick={() => handleDelete(note.id)}
-                        className="text-xs text-red-500 hover:text-red-600 transition">
+                        className="text-xs text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-400 transition">
                         Delete
                       </button>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{note.content}</p>
-                  <p className="text-[10px] text-gray-400 mt-2">
+                  <p className="text-sm text-gray-700 dark:text-gray-200 whitespace-pre-wrap">{note.content}</p>
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-2">
                     {new Date(note.created_at).toLocaleDateString()}
                   </p>
                 </div>
@@ -228,7 +228,7 @@ export default function NotesPage() {
 
       {!loading && notes.length === 0 && (
         <FadeIn>
-          <div className="text-center py-10 text-gray-400">
+          <div className="text-center py-10 text-gray-400 dark:text-gray-500">
             <p className="text-lg mb-1">No notes yet</p>
             <p className="text-sm">Save notes and code snippets as you learn each topic.</p>
           </div>

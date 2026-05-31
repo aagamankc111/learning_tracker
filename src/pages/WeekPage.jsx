@@ -80,6 +80,7 @@ export default function WeekPage() {
   const [checkedMap, setCheckedMap] = useState({});
   const [openDay, setOpenDay] = useState(null);
   const dayRefs = useRef({});
+  const { notify } = useNotifications();
 
   useEffect(() => {
     if (!week) return;
@@ -189,15 +190,10 @@ export default function WeekPage() {
 
         if (error) throw error;
       } catch (err) {
-        console.error('Failed to sync to Supabase:', err);
-        setCheckedMap((prev) => {
-          const rolledBack = { ...prev, [key]: !newCompleted };
-          updateLocalStorage(week.id, day.day, rolledBack);
-          return rolledBack;
-        });
+        console.error('Failed to sync to Supabase, progress kept in localStorage:', err);
       }
     }
-  }, [week?.id]);
+  }, [week?.id, notify]);
 
   if (!week) {
     return (
@@ -208,7 +204,6 @@ export default function WeekPage() {
     );
   }
 
-  const { notify } = useNotifications();
   const style = weekStyles[week.color];
   const totalItems = week.days.reduce((s, d) => s + d.reviewItems.length, 0);
   const checkedCount = week.days.reduce((s, d) => s + d.reviewItems.filter((_, i) => checkedMap[`${d.day}-${i}`]).length, 0);

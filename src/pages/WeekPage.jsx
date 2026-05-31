@@ -9,48 +9,48 @@ import { useNotifications } from '../context/NotificationContext';
 
 const weekStyles = {
   indigo: {
-    gradient: 'from-indigo-600 to-indigo-700', badge: 'bg-indigo-100 text-indigo-700',
-    count: 'text-indigo-700', light: 'bg-indigo-50', ring: 'ring-indigo-500',
+    gradient: 'from-indigo-600 to-indigo-700', badge: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+    count: 'text-indigo-700', light: 'bg-indigo-50 dark:bg-indigo-900/20', ring: 'ring-indigo-500',
     btn: 'bg-indigo-600 hover:bg-indigo-700', accent: 'indigo',
   },
   emerald: {
-    gradient: 'from-emerald-600 to-emerald-700', badge: 'bg-emerald-100 text-emerald-700',
-    count: 'text-emerald-700', light: 'bg-emerald-50', ring: 'ring-emerald-500',
+    gradient: 'from-emerald-600 to-emerald-700', badge: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+    count: 'text-emerald-700', light: 'bg-emerald-50 dark:bg-emerald-900/20', ring: 'ring-emerald-500',
     btn: 'bg-emerald-600 hover:bg-emerald-700', accent: 'emerald',
   },
   violet: {
-    gradient: 'from-violet-600 to-violet-700', badge: 'bg-violet-100 text-violet-700',
-    count: 'text-violet-700', light: 'bg-violet-50', ring: 'ring-violet-500',
+    gradient: 'from-violet-600 to-violet-700', badge: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
+    count: 'text-violet-700', light: 'bg-violet-50 dark:bg-violet-900/20', ring: 'ring-violet-500',
     btn: 'bg-violet-600 hover:bg-violet-700', accent: 'violet',
   },
   amber: {
-    gradient: 'from-amber-600 to-amber-700', badge: 'bg-amber-100 text-amber-700',
-    count: 'text-amber-700', light: 'bg-amber-50', ring: 'ring-amber-500',
+    gradient: 'from-amber-600 to-amber-700', badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+    count: 'text-amber-700', light: 'bg-amber-50 dark:bg-amber-900/20', ring: 'ring-amber-500',
     btn: 'bg-amber-600 hover:bg-amber-700', accent: 'amber',
   },
   cyan: {
-    gradient: 'from-cyan-600 to-cyan-700', badge: 'bg-cyan-100 text-cyan-700',
-    count: 'text-cyan-700', light: 'bg-cyan-50', ring: 'ring-cyan-500',
+    gradient: 'from-cyan-600 to-cyan-700', badge: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300',
+    count: 'text-cyan-700', light: 'bg-cyan-50 dark:bg-cyan-900/20', ring: 'ring-cyan-500',
     btn: 'bg-cyan-600 hover:bg-cyan-700', accent: 'cyan',
   },
   rose: {
-    gradient: 'from-rose-600 to-rose-700', badge: 'bg-rose-100 text-rose-700',
-    count: 'text-rose-700', light: 'bg-rose-50', ring: 'ring-rose-500',
+    gradient: 'from-rose-600 to-rose-700', badge: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
+    count: 'text-rose-700', light: 'bg-rose-50 dark:bg-rose-900/20', ring: 'ring-rose-500',
     btn: 'bg-rose-600 hover:bg-rose-700', accent: 'rose',
   },
   teal: {
-    gradient: 'from-teal-600 to-teal-700', badge: 'bg-teal-100 text-teal-700',
-    count: 'text-teal-700', light: 'bg-teal-50', ring: 'ring-teal-500',
+    gradient: 'from-teal-600 to-teal-700', badge: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300',
+    count: 'text-teal-700', light: 'bg-teal-50 dark:bg-teal-900/20', ring: 'ring-teal-500',
     btn: 'bg-teal-600 hover:bg-teal-700', accent: 'teal',
   },
   pink: {
-    gradient: 'from-pink-600 to-pink-700', badge: 'bg-pink-100 text-pink-700',
-    count: 'text-pink-700', light: 'bg-pink-50', ring: 'ring-pink-500',
+    gradient: 'from-pink-600 to-pink-700', badge: 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300',
+    count: 'text-pink-700', light: 'bg-pink-50 dark:bg-pink-900/20', ring: 'ring-pink-500',
     btn: 'bg-pink-600 hover:bg-pink-700', accent: 'pink',
   },
   purple: {
-    gradient: 'from-purple-600 to-purple-700', badge: 'bg-purple-100 text-purple-700',
-    count: 'text-purple-700', light: 'bg-purple-50', ring: 'ring-purple-500',
+    gradient: 'from-purple-600 to-purple-700', badge: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
+    count: 'text-purple-700', light: 'bg-purple-50 dark:bg-purple-900/20', ring: 'ring-purple-500',
     btn: 'bg-purple-600 hover:bg-purple-700', accent: 'purple',
   },
 };
@@ -284,7 +284,7 @@ export default function WeekPage() {
               }}
               className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition border ${
                 openDay === day.day
-                  ? 'bg-indigo-100 text-indigo-700 border-indigo-300 shadow-sm dark:bg-indigo-900/40 dark:text-indigo-300'
+                  ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-700 shadow-sm'
                   : done
                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                   : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:bg-dark-800 dark:text-gray-300 dark:border-dark-600 dark:hover:border-dark-500 dark:hover:bg-dark-700'
@@ -404,7 +404,7 @@ export default function WeekPage() {
                   {/* Project Idea */}
                   <div className="mt-4">
                     <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Mini Project</p>
-                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800 dark:border-amber-800 dark:text-amber-300">
+                    <div className="bg-gradient-to-r from-amber-50 dark:from-amber-900/20 to-orange-50 dark:to-dark-800 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-sm text-amber-800 dark:text-amber-300">
                       {day.projectIdeas}
                     </div>
                   </div>

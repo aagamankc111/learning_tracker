@@ -34,6 +34,9 @@ export function useGamification() {
 
   useEffect(() => {
     loadAll();
+    const handler = () => loadAll();
+    window.addEventListener('progress-updated', handler);
+    return () => window.removeEventListener('progress-updated', handler);
   }, [loadAll]);
 
   const updateStats = useCallback(async (updates) => {

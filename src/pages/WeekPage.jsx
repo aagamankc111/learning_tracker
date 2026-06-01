@@ -6,6 +6,7 @@ import { hasEnrichment } from '../data/curriculum-enrichment';
 import FadeIn from '../components/common/FadeIn';
 import MiniMotivationBar from '../components/Motivation/MiniMotivationBar';
 import { useNotifications } from '../context/NotificationContext';
+import { handleItemCheck } from '../services/progressUpdateService';
 
 const weekStyles = {
   indigo: {
@@ -175,20 +176,19 @@ export default function WeekPage() {
     const user = session?.user;
     if (user) {
       try {
-        const payload = {
-          user_id: user.id,
-          week_number: week.id,
-          day: day.day,
-          item_index: index,
-          completed: newCompleted,
-          updated_at: new Date().toISOString(),
-        };
-
-        const { error } = await supabase
-          .from('daily_progress')
-          .upsert(payload, { onConflict: 'user_id,week_number,day,item_index' });
-
-        if (error) throw error;
+        if (newCompleted) {
+          await handleItemCheck(user.id, week.id, day.day, index, true);
+        } else {
+          const payload = {
+            user_id: user.id, week_number: week.id, day: day.day,
+            item_index: index, completed: false, updated_at: new Date().toISOString(),
+          };
+          const { error } = await supabase
+            .from('daily_progress')
+            .upsert(payload, { onConflict: 'user_id,week_number,day,item_index' });
+          if (error) throw error;
+        }
+        window.dispatchEvent(new CustomEvent('progress-updated'));
       } catch (err) {
         console.error('Failed to sync to Supabase, progress kept in localStorage:', err);
       }

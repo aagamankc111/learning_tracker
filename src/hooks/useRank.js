@@ -30,6 +30,9 @@ export function useRank() {
 
   useEffect(() => {
     if (user) loadRankData();
+    const handler = () => { if (user) loadRankData(); };
+    window.addEventListener('progress-updated', handler);
+    return () => window.removeEventListener('progress-updated', handler);
   }, [user, loadRankData]);
 
   const checkAndUpdateRank = useCallback(async (totalXp) => {

@@ -44,6 +44,9 @@ export function useMetrics() {
 
   useEffect(() => {
     loadMetrics();
+    const handler = () => loadMetrics();
+    window.addEventListener('progress-updated', handler);
+    return () => window.removeEventListener('progress-updated', handler);
   }, [loadMetrics]);
 
   const consistencyScore = calculateConsistencyScore(weeklyLogs);

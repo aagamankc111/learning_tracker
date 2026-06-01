@@ -1,12 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../config/supabase';
-import { useTopics } from '../hooks/useTopics';
+import curriculum from '../data/curriculum';
 import FadeIn from '../components/common/FadeIn';
+
+function buildTopicList() {
+  const seen = new Set();
+  const list = [];
+  for (const week of curriculum.weeks) {
+    for (const day of week.days) {
+      for (const topic of day.topics) {
+        if (!seen.has(topic)) {
+          seen.add(topic);
+          list.push({ id: list.length + 1, title: topic });
+        }
+      }
+    }
+  }
+  return list;
+}
 
 export default function NotesPage() {
   const { user } = useAuth();
-  const { topics } = useTopics();
+  const allSubtopics = useMemo(() => buildTopicList(), []);
   const [notes, setNotes] = useState([]);
   const [content, setContent] = useState('');
   const [selectedSubtopic, setSelectedSubtopic] = useState('');
@@ -14,23 +30,26 @@ export default function NotesPage() {
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const allSubtopics = topics.flatMap((t) => t.subtopics || []);
-
   useEffect(() => {
     if (!user) return;
     fetchNotes();
   }, [user]);
+
+  function getSubtopicTitle(id) {
+    const found = allSubtopics.find(s => s.id === id);
+    return found?.title || `Topic #${id}`;
+  }
 
   async function fetchNotes() {
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('user_notes')
-        .select('*, subtopic:subtopics(*)')
+        .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      setNotes(data || []);
+      setNotes((data || []).map(n => ({ ...n, subtopic: { title: getSubtopicTitle(n.subtopic_id) } })));
     } catch (err) {
       console.error('Failed to fetch notes:', err);
     } finally {

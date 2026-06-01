@@ -3,6 +3,7 @@
   "name": "learning-tracker",
   "main": "worker.js",
   "compatibility_date": "2026-05-31",
+  "account_id": "b11583cb6d16301bd08d5152124bba52",
   "observability": {
     "enabled": true
   },

@@ -73,7 +73,7 @@ export default function AuthForm({ onSuccess }) {
               id="email" type="email" required value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-dark-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-dark-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition bg-white dark:bg-dark-700 text-gray-900 dark:text-gray-100"
             />
           </div>
           <div>
@@ -82,7 +82,7 @@ export default function AuthForm({ onSuccess }) {
               id="password" type="password" required minLength={6} value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="At least 6 characters"
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-dark-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-dark-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition bg-white dark:bg-dark-700 text-gray-900 dark:text-gray-100"
             />
           </div>
           <div className="flex gap-3 pt-2">

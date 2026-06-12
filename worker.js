@@ -5,7 +5,7 @@ export default {
     try {
       const response = await env.ASSETS.fetch(request);
       if (response.status !== 404) return response;
-    } catch {
+    } catch (e) {
       // asset not found, fall through to SPA fallback
     }
 

@@ -1,15 +1,10 @@
+const HTML = `<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Learning Tracker – AI Infrastructure & Cloud</title><script defer="defer" src="/static/js/main.9afaa25e.js"></script><link href="/static/css/main.26bcac1e.css" rel="stylesheet"></head><body class="bg-gray-50 dark:bg-dark-900 text-gray-800 dark:text-gray-100 font-sans antialiased"><script>!function(){var e=localStorage.getItem("theme");("dark"===e||!e&&window.matchMedia("(prefers-color-scheme: dark)").matches)&&document.documentElement.classList.add("dark")}()</script><noscript>You need to enable JavaScript to run this app.</noscript><div id="root"></div></body></html>`;
+
 export default {
   async fetch(request, env, ctx) {
-    const url = new URL(request.url);
-
-    if (url.pathname.match(/\.[a-zA-Z0-9]+$/)) {
-      try {
-        const response = await env.ASSETS.fetch(request);
-        if (response.status === 200) return response;
-      } catch (e) {}
-    }
-
-    url.pathname = '/index.html';
-    return env.ASSETS.fetch(url.toString());
+    return new Response(HTML, {
+      status: 200,
+      headers: { 'Content-Type': 'text/html' },
+    });
   },
 };

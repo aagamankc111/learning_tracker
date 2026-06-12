@@ -14,7 +14,7 @@ export default function MotivationBanner() {
   };
 
   return (
-    <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl p-5 text-white shadow-xl overflow-hidden relative">
+    <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-2xl p-5 text-white shadow-xl overflow-hidden relative">
       <button
         onClick={() => setDismissed(true)}
         className="absolute top-3 right-3 text-white/40 hover:text-white/80 transition text-lg"
@@ -39,7 +39,7 @@ export default function MotivationBanner() {
           </div>
 
           {streakMessage && (
-            <div className="mt-2 bg-amber-500/20 rounded-lg px-3 py-1.5 text-xs text-amber-200">
+            <div className="mt-2 bg-white/20 rounded-lg px-3 py-1.5 text-xs text-white">
               {streakMessage}
             </div>
           )}
@@ -60,7 +60,7 @@ export default function MotivationBanner() {
           )}
 
           {feeling && (
-            <div className="text-xs text-emerald-300 mt-2">
+            <div className="text-xs text-white mt-2">
               logged as feeling {feeling}. keep going!
             </div>
           )}

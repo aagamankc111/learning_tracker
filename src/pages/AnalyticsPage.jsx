@@ -76,10 +76,10 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-6">
       <FadeIn>
-        <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
+        <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
           <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-medium mb-2">Insights</span>
           <h1 className="text-2xl sm:text-3xl font-bold">Progress Analytics</h1>
-          <p className="text-emerald-100 mt-1 text-sm">Track your learning trends, streaks, and topic mastery.</p>
+          <p className="text-indigo-100 mt-1 text-sm">Track your learning trends, streaks, and topic mastery.</p>
         </div>
       </FadeIn>
 
@@ -121,23 +121,23 @@ export default function AnalyticsPage() {
         </FadeIn>
         <FadeIn delay={100}>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 dark:bg-dark-800 dark:border-dark-700">
-            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats?.current_streak || 0}</div>
+            <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">{stats?.current_streak || 0}</div>
             <div className="text-xs text-gray-500 mt-0.5 dark:text-gray-400">Day Streak</div>
             <div className="text-xs text-gray-400 mt-2 dark:text-gray-500">Best: {stats?.longest_streak || 0} days</div>
           </div>
         </FadeIn>
         <FadeIn delay={150}>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 dark:bg-dark-800 dark:border-dark-700">
-            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{completed}/{totalItems}</div>
+            <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">{completed}/{totalItems}</div>
             <div className="text-xs text-gray-500 mt-0.5 dark:text-gray-400">Items Completed</div>
             <div className="mt-2 bg-gray-200 rounded-full h-2 dark:bg-dark-600">
-              <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${percent}%` }} />
+              <div className="bg-indigo-500 h-full rounded-full" style={{ width: `${percent}%` }} />
             </div>
           </div>
         </FadeIn>
         <FadeIn delay={200}>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 dark:bg-dark-800 dark:border-dark-700">
-            <div className="text-2xl font-bold text-violet-600 dark:text-violet-400">{earnedAchievementIds.size}</div>
+            <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">{earnedAchievementIds.size}</div>
             <div className="text-xs text-gray-500 mt-0.5 dark:text-gray-400">Achievements Earned</div>
             <div className="text-xs text-gray-400 mt-2 dark:text-gray-500">Out of {allAchievements.length}</div>
           </div>
@@ -204,7 +204,7 @@ export default function AnalyticsPage() {
                   <div>
                     <div className="font-medium text-sm text-gray-800 dark:text-gray-100">{ua.achievement?.name}</div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">{ua.achievement?.description}</div>
-                    <div className="text-xs text-amber-600 mt-0.5 dark:text-amber-400">+{ua.achievement?.xp_reward || 0} XP</div>
+                    <div className="text-xs text-gray-600 mt-0.5 dark:text-gray-400">+{ua.achievement?.xp_reward || 0} XP</div>
                   </div>
                 </div>
               ))}

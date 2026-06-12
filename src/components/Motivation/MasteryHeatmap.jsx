@@ -5,10 +5,10 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function getIntensity(percent) {
   if (percent === 0) return 'bg-gray-100';
-  if (percent < 25) return 'bg-emerald-100';
-  if (percent < 50) return 'bg-emerald-300';
-  if (percent < 75) return 'bg-emerald-500';
-  return 'bg-emerald-600';
+  if (percent < 25) return 'bg-gray-200';
+  if (percent < 50) return 'bg-gray-300';
+  if (percent < 75) return 'bg-gray-400';
+  return 'bg-indigo-500';
 }
 
 export default function MasteryHeatmap({ compact = false }) {
@@ -49,7 +49,7 @@ export default function MasteryHeatmap({ compact = false }) {
           📅 Learning Activity
         </h3>
         <div className="text-right">
-          <div className={`font-bold text-emerald-600 dark:text-emerald-400 ${compact ? 'text-sm' : 'text-lg'}`}>{consistencyScore}%</div>
+          <div className={`font-bold text-gray-600 dark:text-gray-400 ${compact ? 'text-sm' : 'text-lg'}`}>{consistencyScore}%</div>
           <div className="text-xs text-gray-400 dark:text-gray-500">Consistency</div>
         </div>
       </div>
@@ -80,10 +80,10 @@ export default function MasteryHeatmap({ compact = false }) {
         <div className="flex items-center gap-1">
           <span>Less</span>
           <div className="w-3 h-3 rounded-sm bg-gray-100 dark:bg-dark-600" />
-          <div className="w-3 h-3 rounded-sm bg-emerald-100" />
-          <div className="w-3 h-3 rounded-sm bg-emerald-300" />
-          <div className="w-3 h-3 rounded-sm bg-emerald-500" />
-          <div className="w-3 h-3 rounded-sm bg-emerald-600" />
+          <div className="w-3 h-3 rounded-sm bg-gray-200" />
+          <div className="w-3 h-3 rounded-sm bg-gray-300" />
+          <div className="w-3 h-3 rounded-sm bg-gray-400" />
+          <div className="w-3 h-3 rounded-sm bg-indigo-500" />
           <span>More</span>
         </div>
         <span>{totalActive} active days in last 8 weeks</span>

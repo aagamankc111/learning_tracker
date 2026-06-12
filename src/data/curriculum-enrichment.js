@@ -37,24 +37,24 @@ const CURRICULUM_ENRICHMENT = {
       },
       "interviewQuestions": {
         "conceptual": [
-          "What is the Linux FHS and why does it matter?",
-          "What is the difference between /usr and /usr/local?",
-          "Why is /proc a virtual filesystem?"
+          { "q": "What is the Linux FHS and why does it matter?", "a": "The Filesystem Hierarchy Standard (FHS) defines the directory structure and directory contents in Linux/Unix systems.\n\nIt matters because it provides a consistent layout across all distributions:\n  - Configs always in /etc\n  - Logs always in /var/log\n  - Binaries in /usr/bin or /usr/local/bin\n  - Data in /var/lib\n\nIn production, this means you can debug any Linux system without guessing where files are." },
+          { "q": "What is the difference between /usr and /usr/local?", "a": "/usr is owned by the package manager (apt, yum, etc.) — it contains OS-provided software.\n\n/usr/local is for software you compile or install manually. The package manager never touches /usr/local, so your custom installations survive OS upgrades.\n\nKey distinction: dpkg owns /usr but leaves /usr/local alone." },
+          { "q": "Why is /proc a virtual filesystem?", "a": "/proc is a pseudo-filesystem that exposes kernel data structures as files — it contains no real files on disk, only runtime kernel/process information. It's memory-backed and created by the kernel at boot.\n\nUseful files:\n  - /proc/cpuinfo — CPU details\n  - /proc/meminfo — memory stats\n  - /proc/<PID>/fd — open file descriptors\n  - /proc/<PID>/maps — memory maps\n  - /proc/<PID>/environ — environment variables" }
         ],
         "practical": [
-          "A service writes logs to /opt/app/logs but you can't find them. What do you check?",
-          "Find all files modified in the last 24 hours under /etc"
+          { "q": "A service writes logs to /opt/app/logs but you can't find them. What do you check?", "a": "1) Verify the directory exists:\n     ls -la /opt/app/logs\n\n2) Check if the service is actually writing there:\n     lsof -p <PID> | grep log\n\n3) Check if log rotation moved them:\n     ls -la *.gz\n\n4) Verify the service config — maybe LOG_DIR env var points elsewhere.\n\n5) Check if it's a dangling symlink:\n     ls -la /opt/app/logs" },
+          { "q": "Find all files modified in the last 24 hours under /etc", "a": "find /etc -type f -mtime -1\n\nFlags:\n  -mtime -1  = modified less than 24h ago\n  -mtime 0   = modified in last 24h from midnight\n\nWith directories:\n  find /etc -mtime -1\n\nMore precise:\n  find /etc -newermt 'yesterday' -type f" }
         ],
         "scenario": [
-          "A production server has 100% disk on /var. You can't SSH because SSHd can't write logs. How do you recover?",
-          "An engineer moved nginx.conf to /etc/nginx/conf.d/default.conf but nginx won't restart. Why?"
+          { "q": "A production server has 100% disk on /var. You can't SSH because SSHd can't write logs. How do you recover?", "a": "1) Out-of-band access:\n     Use AWS Console / iDRAC / IPMI to access the console directly\n\n2) Free emergency space:\n     rm -rf /var/log/*.gz\n     truncate -s 0 /var/log/large.log\n     journalctl --vacuum-time=1d\n\n3) Mount a new volume to /var/log via cloud API if available\n\n4) Restart SSHd once space is freed\n\nPrevention:\n  - Monitor disk at 80% with alerting\n  - Separate /var/log on its own partition" },
+          { "q": "An engineer moved nginx.conf to /etc/nginx/conf.d/default.conf but nginx won't restart. Why?", "a": "Nginx loads config from /etc/nginx/nginx.conf via the include directive.\n\nTypically nginx.conf includes conf.d/*.conf, but moving nginx.conf there doesn't work because nginx.conf itself is the main config entry point — not something that gets included.\n\nThe fix:\n  1) Keep nginx.conf at /etc/nginx/nginx.conf\n  2) Create a separate file in conf.d/ for site-specific configs\n  3) Run nginx -t to test config before restarting" }
         ],
         "senior": [
-          "Design a filesystem layout for a high-traffic web application serving 10K RPS. Consider log rotation, read/write separation, and security",
-          "Explain how FHS applies in a containerized environment (Docker/K8s). What changes?"
+          { "q": "Design a filesystem layout for a high-traffic web application serving 10K RPS. Consider log rotation, read/write separation, and security", "a": "Separate partitions:\n  /              — OS root, read-only in production\n  /var/log       — separate volume, 80% alert, logrotate maxage 30\n  /var/lib/mysql — high-iops SSD for database\n  /var/cache/nginx — tmpfs for performance\n  /tmp           — noexec,nosuid mounted\n\nSecurity:\n  - Read-only rootfs for containers\n  - Mount /var with noexec\n  - /proc with hidepid=2\n  - LUKS encryption for data partitions" },
+          { "q": "Explain how FHS applies in a containerized environment (Docker/K8s). What changes?", "a": "In containers, the rootfs IS the application:\n  - /usr, /etc, /bin are all from the image\n  - /var/log goes to stdout/stderr (container logs)\n  - Volume mounts target specific paths like /var/lib/postgresql/data\n  - /proc and /sys are still virtual but namespaced per container\n\nKey changes:\n  - Configs come from env vars or ConfigMaps, not /etc\n  - Logs go to stdout (picked up by container runtime) rather than /var/log\n  - Service config via environment, not files in /etc\n\nBut the standard still matters for base images and debugging containers." }
         ],
         "systemDesign": [
-          "Design a logging infrastructure that handles 100TB/day across 10,000 servers. Where do logs live at each stage (agent → collector → storage)?"
+          { "q": "Design a logging infrastructure that handles 100TB/day across 10,000 servers. Where do logs live at each stage?", "a": "Agent layer:\n  Filebeat/Fluentd on each server reads from /var/log and /var/lib/docker/containers,\n  adds metadata (host, service, env), ships to Kafka\n\nAggregation layer:\n  Kafka (100+ partitions, 3x replication) buffers the data\n\nStream processing:\n  Logstash/Fluentd consumers parse (json, grok regex), enrich, route to storage\n\nStorage layer:\n  Hot:   Elasticsearch 7d, SSD, 3 shards, 1 replica\n  Warm:  ES 30d, HDD\n  Cold:  S3/Glacier 1yr+ via frozen indices\n\nAlternative: Loki with S3 backend (cheaper, no full-text indexing)\n\nLog path: agent disk -> Kafka topic -> processor memory -> ES hot SSD -> ES warm HDD -> S3" }
         ]
       },
       "industryExamples": {
@@ -154,23 +154,23 @@ const CURRICULUM_ENRICHMENT = {
       },
       "interviewQuestions": {
         "conceptual": [
-          "What is the difference between a hard link and a symbolic link?",
-          "Explain stdin, stdout, stderr and how to redirect each"
+          { "q": "What is the difference between a hard link and a symbolic link?", "a": "Hard link:\n  - Multiple directory entries pointing to the same inode (same data on disk)\n  - Deleting one doesn't affect others\n  - Cannot link across filesystems or to directories\n\nSymbolic link:\n  - A special file that stores a path to another file\n  - Breaks if the target is moved/deleted (dangling symlink)\n  - Can link across filesystems and to directories\n\nCheck with: ls -li\n  - Hard links share the same inode number\n  - Symlinks show 'l' at the start of permissions and -> target" },
+          { "q": "Explain stdin, stdout, stderr and how to redirect each", "a": "Streams:\n  stdin  (FD 0): input stream, defaults to keyboard\n  stdout (FD 1): output stream, defaults to terminal\n  stderr (FD 2): error stream, defaults to terminal\n\nRedirections:\n  cmd > file    — stdout to file (same as 1>)\n  cmd 2> file   — stderr to file\n  cmd &> file   — both stdout and stderr\n  cmd >> file   — append stdout\n\nPipes:\n  cmd1 | cmd2   — connects stdout of cmd1 to stdin of cmd2\n\nDiscard output:\n  cmd > /dev/null 2>&1" }
         ],
         "practical": [
-          "Find all files larger than 100MB in /var: find /var -type f -size +100M",
-          "Count unique IPs in an access log: awk '{print $1}' access.log | sort -u | wc -l"
+          { "q": "Find all files larger than 100MB in /var", "a": "find /var -type f -size +100M\n\nFor 100MB exactly: -size 100M\n\nWith human-readable sizes:\n  find /var -type f -size +100M -exec ls -lh {} \\;\n\nFor gigabytes:\n  find /var -type f -size +1G" },
+          { "q": "Count unique IPs in an access log", "a": "awk '{print $1}' access.log | sort -u | wc -l\n\nBreakdown:\n  awk '{print $1}'  — extracts first field (IP)\n  sort -u           — deduplicates\n  wc -l             — counts\n\nMore efficient (single pass):\n  awk '!seen[$1]++' access.log | wc -l\n\nWith counts per IP:\n  awk '{ips[$1]++} END{for (ip in ips) print ips[ip], ip}' access.log | sort -rn" }
         ],
         "scenario": [
-          "A developer says 'the server is slow'. What 5 commands do you run first?",
-          "You need to find a file containing 'TODO' but don't know the filename: grep -r 'TODO' ."
+          { "q": "A developer says 'the server is slow'. What 5 commands do you run first?", "a": "1) top or htop\n     — overall CPU/memory/load\n\n2) vmstat 1 5\n     — CPU queues, context switches, I/O wait\n\n3) free -h\n     — memory pressure (available vs used, swap usage)\n\n4) iostat -x 1 3\n     — disk I/O (await, %util)\n\n5) netstat -tulpn | wc -l or ss -s\n     — connection counts\n\nBonus: dmesg | tail\n  — OOM killer or kernel errors\n\nCovers CPU, memory, disk, network, and kernel — full system health check." },
+          { "q": "You need to find a file containing 'TODO' but don't know the filename", "a": "grep -r 'TODO' .\n  — recursive from current dir\n\nVariations:\n  grep -rw 'TODO'       — whole words only\n  grep -ri 'todo'       — case-insensitive\n  grep -rl 'TODO' .     — list filenames only\n\nFor large codebases, use ripgrep (much faster):\n  rg -l 'TODO'" }
         ],
         "senior": [
-          "Explain how pipes work at the OS level (process substitution, pipe buffers, SIGPIPE)",
-          "How would you monitor and limit a process's file descriptor usage in production?"
+          { "q": "Explain how pipes work at the OS level (process substitution, pipe buffers, SIGPIPE)", "a": "A pipe is a unidirectional kernel buffer (typically 64KB on Linux) with two FDs.\n\nHow it works:\n  cmd1 | cmd2 forks both children\n  stdout of cmd1 -> pipe write FD\n  stdin of cmd2  -> pipe read FD\n  Buffer fills in kernel space (no disk I/O)\n\nSIGPIPE:\n  When reader closes (cmd2 exits), writer gets SIGPIPE on next write\n  This is why grep exits early when piped to head\n\nAdvanced:\n  pipe(2) syscall creates the buffer\n  splice(2) moves data between pipes without copying to userspace (zero-copy)\n  Process substitution <(cmd) creates a named pipe or /dev/fd entry" },
+          { "q": "How would you monitor and limit a process's file descriptor usage in production?", "a": "Monitor:\n  lsof -p <PID> | wc -l       — FD count\n  ls -la /proc/<PID>/fd       — see all open FDs\n  /proc/<PID>/limits          — configured limits\n  Alert when approaching soft limit (default 1024)\n\nLimit:\n  systemd: LimitNOFILE=65536 in unit file\n  /etc/security/limits.conf: hard nofile 65536\n\nSystem-wide:\n  sysctl fs.nr_open and fs.file-max\n\nWatch for leaks:\n  Steady increase in FD count over time signals a bug" }
         ],
         "systemDesign": [
-          "Design a command execution service that runs user-submitted commands in a sandboxed environment (think GitHub Actions or AWS Systems Manager)"
+          { "q": "Design a command execution service that runs user-submitted commands in a sandboxed environment", "a": "Architecture:\n  1) API layer — receives command + constraints (timeout, memory, files)\n  2) Queue — SQS/RabbitMQ decouples requests\n  3) Worker pool — runs commands in isolated containers\n\nContainer sandbox:\n  - Read-only rootfs\n  - CPU/memory limits (cgroups)\n  - Network policy (no outbound by default)\n  - tmpfs for /tmp (no disk writes)\n  - seccomp profile to block dangerous syscalls\n  - AppArmor/SELinux MAC\n\nRuntime:\n  - stdout/stderr streamed via WebSocket\n  - Timeout enforced by SIGKILL after grace period\n  - Logs shipped to S3/Elasticsearch\n\nSecurity:\n  - OIDC auth, per-command workload identity\n  - No host access, all actions audited" }
         ]
       },
       "industryExamples": {
@@ -270,23 +270,23 @@ const CURRICULUM_ENRICHMENT = {
       },
       "interviewQuestions": {
         "conceptual": [
-          "How does grep work internally? (Boyer-Moore algorithm, memory-mapped files)",
-          "What's the difference between grep -E and grep -P?"
+          { "q": "How does grep work internally? (Boyer-Moore algorithm, memory-mapped files)", "a": "Grep uses the Boyer-Moore algorithm for fast pattern matching:\n  - Looks at mismatched characters to skip ahead rather than checking every position\n  - Uses two lookup tables: bad character shift, good suffix shift\n\nFor large files, grep uses mmap() to memory-map the file into the address space:\n  - Avoids expensive read() syscalls\n  - Kernel handles paging\n  - Efficient for files larger than RAM\n\nWith -P (Perl-compatible), it uses PCRE library with JIT compilation for additional speed." },
+          { "q": "What's the difference between grep -E and grep -P?", "a": "-E enables extended regex (ERE):\n  Supports +, ?, |, (), {} without escaping\n  Portable across all systems\n\n-P enables Perl-compatible regex (PCRE):\n  Lookaheads (?=), lookbehinds (?<=)\n  Non-greedy matching (.*?)\n  Backreferences (\\1)\n  \\d/\\w/\\s shorthand\n  Possessive quantifiers\n\n-P is significantly more powerful but not available on all systems (requires PCRE library).\nFor portability, use -E. For complex patterns, -P is essential." }
         ],
         "practical": [
-          "Extract all IPs from a log file and count unique ones",
-          "Find lines between two timestamps in a log file"
+          { "q": "Extract all IPs from a log file and count unique ones", "a": "grep -oP '\\b(?:[0-9]{1,3}\\.){3}[0-9]{1,3}\\b' access.log | sort -u | wc -l\n\nThe -o flag outputs only the matched text (not the whole line).\n\nFilter private IPs:\n  grep -v '^(10\\.|192\\.168\\.|172\\.(1[6-9]|2[0-9]|3[0-1])\.)'\n\nAwk approach:\n  awk '{match($0, /[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+/, ip);\n         if(ip[0]) seen[ip[0]]++}\n       END{for(i in seen) print seen[i], i}' access.log | sort -rn" },
+          { "q": "Find lines between two timestamps in a log file", "a": "awk '/2025-01-01 10:00:00/,/2025-01-01 11:00:00/' /var/log/syslog\n\nThis uses awk's range pattern (pat1, pat2).\n\nAlternative with sed:\n  sed -n '/START_TIME/,/END_TIME/p' logfile\n\nFor timestamps not on boundary lines:\n  awk '{if($0 >= \"10:00:00\" && $0 <= \"11:00:00\") print}'" }
         ],
         "scenario": [
-          "A log file is 10GB and grep is too slow. What alternatives do you have?",
-          "You need to search across 100 servers for an error pattern. How do you approach it?"
+          { "q": "A log file is 10GB and grep is too slow. What alternatives do you have?", "a": "1) Use ripgrep (rg) — 10-100x faster than grep, uses SIMD instructions\n\n2) Use mawk (faster awk implementation) for line-by-line processing\n\n3) Split and parallelize:\n     split -n l/8 bigfile.log chunk_ && parallel -j8 grep 'pattern' chunk_*\n\n4) Build an index (like mlocate) for repeated searches\n\n5) Stream through compression:\n     zcat file.gz | rg pattern\n     (avoids decompressing to disk)" },
+          { "q": "You need to search across 100 servers for an error pattern. How do you approach it?", "a": "Option A — Distributed orchestration:\n  ansible 'all' -m shell -a 'grep \"ERROR\" /var/log/app.log | tail -20'\n\nOption B — SSH multiplexing:\n  parallel-ssh -h servers.txt -i 'grep \"pattern\" /var/log/syslog'\n\nOption C — Centralized (best):\n  If logs are shipped to ELK/Loki/Splunk, query the central index:\n  curl -XPOST 'elk:9200/_search' with query DSL\n\nRecommendation:\n  Set up centralized logging (Filebeat -> Kafka -> Elasticsearch)\n  so you never SSH into 100 servers manually again" }
         ],
         "senior": [
-          "Design a distributed grep system that searches across 10K servers and returns results within 5 seconds (think how Splunk or Elasticsearch works)",
-          "How would you optimize awk/sed for processing 100GB+ log files on a memory-constrained server?"
+          { "q": "Design a distributed grep system that searches across 10K servers and returns results within 5 seconds", "a": "Architecture:\n\n1) Index layer:\n  - Each server runs an agent (like Filebeat) that tails logs\n  - Indexes locally (Lucene inverted index or SQLite FTS)\n\n2) Query layer:\n  - Coordinator receives query, fans out to all servers via HTTP/gRPC\n  - Each runs local search against its index\n  - Returns matches + metadata\n\n3) Aggregation layer:\n  - Merges results, deduplicates, ranks by relevance\n\n4) Cache:\n  - Recent queries cached in Redis with TTL\n\nPerformance: <1s index lag, <2s search\n\nSplunk and Elasticsearch are commercial versions of this approach." },
+          { "q": "How would you optimize awk/sed for processing 100GB+ log files on a memory-constrained server?", "a": "1) Use streaming — never load the entire file:\n     awk '{process}' file (line-by-line)\n\n2) Use mawk (not gawk) — 10x faster, less memory\n\n3) Reduce regex complexity:\n     Use index() instead of ~ for fixed strings\n     if(index($0, \"ERROR\")) is faster than if($0 ~ /ERROR/)\n\n4) Split + parallel:\n     split -n l/N bigfile chunk && parallel -j N mawk '{...}' chunk_*\n\n5) Pre-filter with ripgrep before awk:\n     rg 'ERROR' bigfile | mawk '{...}'" }
         ],
         "systemDesign": [
-          "Design a log aggregation pipeline that handles 1PB/day with sub-minute search latency. Discuss sharding, indexing, compression, and query optimization."
+          { "q": "Design a log aggregation pipeline that handles 1PB/day with sub-minute search latency", "a": "1) Ingestion:\n   - 10K+ servers ship logs via Fluentd/Vector to Kafka\n   - Kafka: 1000+ partitions, 3x replication, compression=snappy\n\n2) Stream processing:\n   - Kafka consumers parse, enrich, route by tenant/service\n\n3) Storage:\n   - Time-based sharding (hourly indices)\n   - Hot:  ES SSD 7d, Warm: ES HDD 30d, Cold: S3 frozen 1yr\n   - ILM (Index Lifecycle Management) for automated transitions\n\n4) Indexing:\n   - Inverted index on message field\n   - doc_values for aggregations\n   - keyword mapping for structured fields (host, service, level)\n\n5) Compression:\n   - best_compression codec (ES) — 2:1 ratio\n   - Kafka snappy — 1.5:1\n   - Parquet/ZSTD for archival — 5:1\n\n6) Query optimization:\n   - Filter-first (time range, namespace, host) before full-text\n   - Use search_after instead of deep pagination\n   - Pre-aggregated rollups for common queries" }
         ]
       },
       "industryExamples": {
@@ -389,25 +389,25 @@ const CURRICULUM_ENRICHMENT = {
       },
       "interviewQuestions": {
         "conceptual": [
-          "Explain the difference between chmod 755 and chmod 754",
-          "What is the setuid bit and when should it be used?",
-          "How do ACLs extend traditional Unix permissions?"
+          { "q": "Explain the difference between chmod 755 and chmod 754", "a": "755 = rwxr-xr-x:\n  Owner: read+write+execute (7 = 4+2+1)\n  Group: read+execute (5 = 4+1)\n  Others: read+execute (5)\n\n754 = rwxr-xr--:\n  Owner: full\n  Group: read+execute\n  Others: read-only (4)\n\nDifference:\n  755 allows others to execute — used for public scripts\n  754 blocks others from executing — used for files with sensitive data\n\nFor directories:\n  755 allows others to traverse (x)\n  754 blocks traversal — others see filenames but can't enter" },
+          { "q": "What is the setuid bit and when should it be used?", "a": "setuid (chmod u+s, octal 4000) allows a program to run with the permissions of the file owner.\n\nUsed sparingly for:\n  - passwd (needs to write /etc/shadow as root)\n  - ping (needs raw sockets)\n\nSecurity risk:\n  If a setuid-root program is compromised, the attacker gets root\n\nModern alternatives:\n  - Linux capabilities (CAP_NET_RAW for ping, CAP_CHOWN for passwd)\n  - D-Bus for privilege separation\n\nNever set setuid on scripts — only on compiled binaries." },
+          { "q": "How do ACLs extend traditional Unix permissions?", "a": "ACLs allow permissions for multiple specific users and groups beyond the single owner/group/others model.\n\nExamples:\n  setfacl -m u:bob:rwx file       # give bob rwx without changing group\n  setfacl -m g:devs:rx file        # give devs group rx\n  setfacl -d -m g:devs:rx dir      # default ACL for new files\n\nView: getfacl file\n\nDetection: ACLs add a + at the end of ls -l permissions (e.g., -rw-rwx---+)\n\nPerformance: kernel checks ACL entries linearly vs the fast owner/group/others path" }
         ],
         "practical": [
-          "A user can't read a file but is in the group that owns it. Why?",
-          "Find all files with setuid bit set: find / -perm -4000",
-          "Create a shared directory where both users can modify each other's files: use SGID bit"
+          { "q": "A user can't read a file but is in the group that owns it. Why?", "a": "Common causes:\n  1) User wasn't re-authenticated after being added to group\n     — fix: newgrp or logout/login\n\n  2) Directory permissions block traversal\n     — fix: chmod +x on parent directories\n\n  3) ACLs override standard permissions\n     — check: getfacl file\n\n  4) Filesystem mounted with noexec/nosuid (unlikely for read)\n\nDebug:\n  id              — verify groups\n  ls -la          — check owner/group\n  getfacl         — check ACLs\n  namei -l /path  — check all parent directory permissions" },
+          { "q": "Find all files with setuid bit set", "a": "find / -perm -4000\n\n-4000 means 'at least setuid set' (matches 4xxx)\n\nFor setgid:  find / -perm -2000\nFor both:    find / -perm -6000\n\nExclude virtual filesystems:\n  find / -perm -4000 -not -path '/proc/*' -not -path '/sys/*'\n\nWith details:\n  find / -type f -perm -4000 -exec ls -la {} \\; 2>/dev/null" },
+          { "q": "Create a shared directory where both users can modify each other's files", "a": "mkdir /shared\nchmod 2775 /shared\nchgrp devteam /shared\n\nSGID bit (2000) ensures new files inherit the directory's group (devteam),\nnot the creator's primary group.\n\nWith chmod g+rwxs, both users can write and each can edit the other's files.\n\nTo control deletion:\n  - Sticky bit: chmod +t (only owner can delete own files)\n  - Default ACL: setfacl -d -m g:devteam:rwx" }
         ],
         "scenario": [
-          "A script works when run manually but fails in CI/CD with 'Permission denied'. What do you check?",
-          "You need to give a developer access to /var/log/nginx/ but not sudo. How?"
+          { "q": "A script works when run manually but fails in CI/CD with 'Permission denied'. What do you check?", "a": "1) Different user context:\n     chmod +x script.sh — may lack execute permission for CI user\n\n2) Parent directory permissions:\n     namei -l script.sh — CI runner can't traverse a parent dir\n\n3) Sudo requirement:\n     Script uses sudo but CI has no passwordless sudo\n\n4) Windows line endings:\n     \\r\\n breaks #!/bin/bash — fix: dos2unix script.sh\n\n5) Git LFS:\n     File might be a pointer, not the actual script — fix: git lfs pull" },
+          { "q": "You need to give a developer access to /var/log/nginx/ but not sudo. How?", "a": "1) Add to existing log group:\n     usermod -aG adm dev\n\n2) Or create a dedicated group:\n     usermod -aG nginx dev\n     chgrp nginx /var/log/nginx\n     chmod g+s /var/log/nginx\n\n3) Fine-grained with ACLs:\n     setfacl -m g:devs:rx /var/log/nginx\n     setfacl -m g:devs:r /var/log/nginx/*.log\n\n4) Restricted shell:\n     Create rbash that only allows tail/cat/grep on /var/log/nginx/" }
         ],
         "senior": [
-          "Explain how Linux capabilities (CAP_NET_BIND_SERVICE, CAP_SYS_ADMIN) relate to traditional permissions",
-          "How do user namespaces in Docker/K8s map permissions between host and container?"
+          { "q": "Explain how Linux capabilities (CAP_NET_BIND_SERVICE, CAP_SYS_ADMIN) relate to traditional permissions", "a": "Capabilities break the root/non-root binary into granular privileges.\n\nInstead of running as root (all powers), a process can have specific caps:\n  CAP_NET_BIND_SERVICE  — bind to ports <1024 without root\n  CAP_NET_RAW           — raw sockets (ping)\n  CAP_SYS_ADMIN         — many admin ops (too broad, avoid)\n\nSet via setcap:\n  setcap cap_net_bind_service=+ep /usr/bin/myapp\n\nIn containers:\n  --cap-drop=ALL --cap-add=NET_BIND_SERVICE\n\nThis replaces setuid for most use cases — principle of least privilege.\n\nView: getcap or /proc/<PID>/status (CapEff, CapInh fields)" },
+          { "q": "How do user namespaces in Docker/K8s map permissions between host and container?", "a": "User namespaces remap UIDs inside the container to different UIDs on the host.\n\nExample:\n  Container UID 0 (root) → Host UID 100000 (unprivileged)\n  If container is compromised, attacker has UID 100000 on host — not root\n\nMapping defined in /etc/subuid and /etc/subgid on the host.\n\nK8s: pod securityContext controls:\n  runAsUser, fsGroup, supplementalGroups\n\nBenefits:\n  - Prevent container breakouts\n  - Run as 'root' in container without host root access\n\nLimitations:\n  - Can't use devices\n  - Some syscalls blocked\n  - NFS mounting doesn't work with user namespaces" }
         ],
         "systemDesign": [
-          "Design a permission model for a multi-tenant ML platform where 100+ users share a Kubernetes cluster. Consider namespace-level RBAC, pod security policies, and network policies."
+          { "q": "Design a permission model for a multi-tenant ML platform where 100+ users share a Kubernetes cluster", "a": "1) Namespace per tenant:\n     Isolates workloads, applies resource quotas\n\n2) RBAC:\n     ClusterRoles for platform ops (manage nodes, CRDs)\n     Roles per namespace for tenant users (manage pods, services)\n\n3) Pod Security:\n     Enforce Restricted profile via pod-security.kubernetes.io/enforce\n\n4) Network Policies:\n     Default-deny ingress+egress\n     Allow DNS, intra-namespace\n     Block cross-namespace by default\n\n5) OPA/Gatekeeper:\n     Require runAsNonRoot, resource limits\n     Disallow hostNetwork/hostPID\n     Enforce mandatory labels (tenant-id, environment)\n\n6) ResourceQuota + LimitRange:\n     Prevent noisy-neighbor issues\n\n7) Service Mesh (Istio):\n     mTLS + authorization policies between services\n\n8) Audit logging:\n     All kubectl and API operations logged" }
         ]
       },
       "industryExamples": {
@@ -513,24 +513,24 @@ const CURRICULUM_ENRICHMENT = {
       },
       "interviewQuestions": {
         "conceptual": [
-          "What is a zombie process and how does it form?",
-          "Explain the difference between a process and a thread",
-          "How does the OOM killer select which process to kill?"
+          { "q": "What is a zombie process and how does it form?", "a": "A zombie (defunct) process has completed execution but still has an entry in the process table because its parent hasn't called wait()/waitpid() to read its exit status.\n\nState:\n  - Process is dead (memory/resources freed)\n  - PID and exit code are still held\n  - Shows as Z in ps output\n\nRisk:\n  - Accumulating zombies exhaust the PID limit\n\nFix:\n  - Kill the parent process (SIGKILL)\n  - Orphans get reaped by init/systemd\n\nPrevention:\n  - Parent must call wait()\n  - Set SIGCHLD handler\n  - Or set SA_NOCLDWAIT to auto-reap" },
+          { "q": "Explain the difference between a process and a thread", "a": "Process:\n  - Own address space, file descriptors, PID\n  - Isolated from other processes\n  - Heavier context switch (TLB flush)\n\nThread:\n  - Lightweight execution unit within a process\n  - Shares address space, FDs, signal handlers\n  - Own stack and register state\n  - Cheaper context switch (same memory mapping)\n\nLinux implementation:\n  Threads are 'tasks' created with clone() using:\n  CLONE_VM | CLONE_FILES | CLONE_SIGHAND\n\nps -l shows LWP (lightweight process) for threads" },
+          { "q": "How does the OOM killer select which process to kill?", "a": "The OOM killer scores processes using oom_badness():\n  - Total RAM used (RSS + swap)\n  - oom_score_adj (range -1000 to 1000)\n  - Root processes get a small bonus (3%)\n  - Child process counts\n  - OOM killer itself is immune\n\nThe highest-scored process gets SIGKILL.\n\nKubernetes sets oom_score_adj based on QoS:\n  Guaranteed: -997\n  Burstable:  0 to 997\n  BestEffort:  1000 (killed first)\n\nControl: /proc/<PID>/oom_adj or container memory limits" }
         ],
         "practical": [
-          "Find top 5 memory consumers: ps aux --sort=-%mem | head -5",
-          "Kill a process stuck in D state that won't respond to SIGKILL"
+          { "q": "Find top 5 memory consumers on a Linux server", "a": "ps aux --sort=-%mem | head -5\n\nAlternative:\n  ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%mem | head -6\n\nBetter formatting:\n  top -b -n 1 -o %MEM | head -17\n\nHuman-readable RSS:\n  ps -eo pid,user,rss,command --sort=-rss |\n    awk '{printf \"%s\\t%s\\t%.2f MB\\t%s\\n\", $1, $2, $3/1024, $4}' |\n    head -5\n\nInteractive: htop (sort by MEM%, F6 to change sort)" },
+          { "q": "Kill a process stuck in D state (uninterruptible sleep) that won't respond to SIGKILL", "a": "D state = waiting in an I/O operation at kernel level.\n  SIGKILL can't interrupt it until the I/O completes.\n\nSteps:\n  1) Identify: ps aux | grep ' D'\n\n  2) Check what it's waiting on:\n       cat /proc/<PID>/stack  (kernel stack trace)\n\n  3) Check I/O:\n       iostat -x 1  (await > 30s = hung disk)\n\n  4) Fix underlying I/O:\n       Check NFS mount (stat can hang)\n       Check disk health (smartctl)\n       Umount hung filesystem (umount -l)\n\n  5) Last resort: reboot\n\nPrevention: mount NFS with soft,intr options" }
         ],
         "scenario": [
-          "Load average is 50 but CPU is 90% idle — what's happening?",
-          "App stops accepting connections but process is running — diagnosis?"
+          { "q": "Load average is 50 but CPU is 90% idle — what's happening?", "a": "Load average = processes in running + uninterruptible (D) state.\nHigh load + idle CPU = processes stuck in D state (I/O wait).\n\nCheck:\n  iostat -x 1        — high %util, await > 30ms = disk bottleneck\n  nfsiostat          — if NFS mounted\n  /proc/<PID>/status — D state processes\n  dmesg              — hung task timeout warnings\n\nCommon causes:\n  - Slow SAN/NFS\n  - Failing disk\n  - Kernel bug with a specific driver\n\nFix:\n  - Move to faster storage (SSD)\n  - Add more I/O bandwidth\n  - Fix NFS timeouts\n  - Reboot if kernel issue" },
+          { "q": "App stops accepting connections but process is running — diagnosis?", "a": "1) File descriptor exhaustion:\n     lsof -p <PID> | wc -l vs ulimit -n\n\n2) Port check:\n     netstat -tulpn | grep <PORT>\n\n3) Connection table:\n     ss -s vs net.ipv4.ip_local_port_range\n\n4) Memory:\n     free -h; /proc/<PID>/status (VmRSS)\n\n5) Thread pool:\n     jstack (Java), pstack, or app metrics\n\n6) Kernel messages:\n     dmesg for OOM or 'SYN flooding'\n\n7) App logs:\n     Process is alive but deadlocked or out of resources" }
         ],
         "senior": [
-          "Explain how cgroups v2 manage CPU/memory/I/O and how Kubernetes leverages them",
-          "Design graceful shutdown for 10K req/s system — signal order, timeouts, draining"
+          { "q": "Explain how cgroups v2 manage CPU/memory/I/O and how Kubernetes leverages them", "a": "cgroups v2 controllers (in /sys/fs/cgroup/<controller>/):\n  cpu.max         — quota/period (CFS)\n  memory.max      — hard limit\n  memory.high     — soft throttle\n  io.max          — read/write bandwidth per device\n\nKubernetes usage:\n  Each pod has a cgroup slice under /kubepods/\n  Requests -> cpu.weight\n  Limits   -> cpu.max (CFS quota)\n\nQoS classes:\n  Guaranteed: cpu quota = cpu weight, mem limits = requests\n  Burstable:  less strict\n  BestEffort: no limits\n\nOOM: memory.oom.group kills all processes in cgroup on OOM\n\nPSI (Pressure Stall Information):\n  /proc/pressure/cpu, memory, io\n  Used by K8s for descheduling" },
+          { "q": "Design graceful shutdown for 10K req/s system — signal order, timeouts, draining", "a": "Signal handling order:\n  1) SIGTERM — graceful drain\n  2) Drain timeout (configurable, ~30s)\n  3) In-flight request grace period (10-50s)\n  4) SIGKILL (force) after terminationGracePeriodSeconds\n\nImplementation:\n  - /healthz returns 503 on SIGTERM\n  - preStop hook in K8s: sleep 5 then SIGTERM\n  - Liveness probe fails once drain starts\n\nHTTP: http.Server.Shutdown() (Go) or equivalent\n   - Stop accepting new requests\n   - Wait for active requests to complete\n\ngRPC: send GOAWAY, stop accepting streams\n\nAlways log shutdown progress with metrics for debugging." }
         ],
         "systemDesign": [
-          "Design process supervision for 200 microservices on 50 nodes — health checking, restarts, resource limits, logging"
+          { "q": "Design process supervision for 200 microservices on 50 nodes", "a": "1) Node-level:\n     systemd for container runtime (containerd)\n     kubelet for pod lifecycle\n\n2) Per-service:\n     K8s Deployments with liveness, readiness, startup probes\n\n3) Resource management:\n     requests/limits per container\n     HPA for autoscaling\n\n4) Node resources:\n     CPU manager (static policy for exclusive cores)\n     Device manager for GPUs\n\n5) Monitoring:\n     Prometheus + node_exporter + kube-state-metrics + cAdvisor\n\n6) Logging:\n     Structured stdout -> Fluentd -> Loki\n\n7) Auto-remediation:\n     K8s self-heals (restarts failing probes)\n     Karpenter replaces failing nodes\n\n8) Alerting:\n     Critical -> PagerDuty, Warning -> Slack\n\nGoal: zero manual SSH for incident response" }
         ]
       },
       "industryExamples": {

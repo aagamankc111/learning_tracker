@@ -3,12 +3,12 @@ import FadeIn from '../components/common/FadeIn';
 import MiniMotivationBar from '../components/Motivation/MiniMotivationBar';
 
 const colorMap = {
-  indigo: { gradient: 'from-indigo-500 to-indigo-600', badge: 'bg-indigo-100 text-indigo-700', hover: 'hover:border-indigo-200' },
-  blue: { gradient: 'from-blue-500 to-blue-600', badge: 'bg-blue-100 text-blue-700', hover: 'hover:border-blue-200' },
-  yellow: { gradient: 'from-yellow-500 to-amber-500', badge: 'bg-yellow-100 text-yellow-700', hover: 'hover:border-yellow-200' },
-  orange: { gradient: 'from-orange-500 to-orange-600', badge: 'bg-orange-100 text-orange-700', hover: 'hover:border-orange-200' },
-  violet: { gradient: 'from-violet-500 to-violet-600', badge: 'bg-violet-100 text-violet-700', hover: 'hover:border-violet-200' },
-  red: { gradient: 'from-red-500 to-red-600', badge: 'bg-red-100 text-red-700', hover: 'hover:border-red-200' },
+  indigo: { gradient: 'from-indigo-500 to-indigo-600', badge: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300', hover: 'hover:border-indigo-200' },
+  blue: { gradient: 'from-indigo-500 to-indigo-600', badge: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300', hover: 'hover:border-indigo-200' },
+  yellow: { gradient: 'from-indigo-500 to-indigo-600', badge: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300', hover: 'hover:border-indigo-200' },
+  orange: { gradient: 'from-indigo-500 to-indigo-600', badge: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300', hover: 'hover:border-indigo-200' },
+  violet: { gradient: 'from-indigo-500 to-indigo-600', badge: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300', hover: 'hover:border-indigo-200' },
+  red: { gradient: 'from-indigo-500 to-indigo-600', badge: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300', hover: 'hover:border-indigo-200' },
 };
 
 export default function PracticePage() {
@@ -17,10 +17,10 @@ export default function PracticePage() {
   return (
     <div className="space-y-6">
       <FadeIn>
-        <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
+          <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
           <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-medium mb-2">Practice</span>
           <h1 className="text-2xl sm:text-3xl font-bold">Practice Resources</h1>
-          <p className="text-emerald-100 mt-1 text-sm max-w-2xl">
+          <p className="text-indigo-100 mt-1 text-sm max-w-2xl">
             The best free websites to practice each topic hands-on. Bookmark these — they're more valuable than any course.
             Every topic includes interactive labs, challenges, and real-world environments.
           </p>
@@ -83,15 +83,15 @@ export default function PracticePage() {
           <h2 className="text-lg font-bold mb-3">💡 How to Use These Resources</h2>
           <div className="grid sm:grid-cols-3 gap-4 text-sm">
             <div className="bg-white/10 rounded-lg p-3">
-              <span className="font-bold text-emerald-300">1. Daily Warm-up</span>
+              <span className="font-bold text-indigo-300">1. Daily Warm-up</span>
               <p className="text-gray-300 text-xs mt-1">Spend 15 minutes on an interactive challenge before deep work. OverTheWire Bandit or LeetCode daily.</p>
             </div>
             <div className="bg-white/10 rounded-lg p-3">
-              <span className="font-bold text-emerald-300">2. Topic Deep Dive</span>
+              <span className="font-bold text-indigo-300">2. Topic Deep Dive</span>
               <p className="text-gray-300 text-xs mt-1">When studying a topic, go to the corresponding resource and complete 2-3 exercises. Apply immediately.</p>
             </div>
             <div className="bg-white/10 rounded-lg p-3">
-              <span className="font-bold text-emerald-300">3. Weekend CTF</span>
+              <span className="font-bold text-indigo-300">3. Weekend CTF</span>
               <p className="text-gray-300 text-xs mt-1">Try a Capture The Flag challenge each weekend. picoCTF and TryHackMe consolidate everything you've learned.</p>
             </div>
           </div>

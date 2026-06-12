@@ -8,54 +8,6 @@ import MiniMotivationBar from '../components/Motivation/MiniMotivationBar';
 import { useNotifications } from '../context/NotificationContext';
 import { handleItemCheck } from '../services/progressUpdateService';
 
-const weekStyles = {
-  indigo: {
-    gradient: 'from-indigo-600 to-indigo-700', badge: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
-    count: 'text-indigo-700', light: 'bg-indigo-50 dark:bg-indigo-900/20', ring: 'ring-indigo-500',
-    btn: 'bg-indigo-600 hover:bg-indigo-700', accent: 'indigo',
-  },
-  emerald: {
-    gradient: 'from-emerald-600 to-emerald-700', badge: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
-    count: 'text-emerald-700', light: 'bg-emerald-50 dark:bg-emerald-900/20', ring: 'ring-emerald-500',
-    btn: 'bg-emerald-600 hover:bg-emerald-700', accent: 'emerald',
-  },
-  violet: {
-    gradient: 'from-violet-600 to-violet-700', badge: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
-    count: 'text-violet-700', light: 'bg-violet-50 dark:bg-violet-900/20', ring: 'ring-violet-500',
-    btn: 'bg-violet-600 hover:bg-violet-700', accent: 'violet',
-  },
-  amber: {
-    gradient: 'from-amber-600 to-amber-700', badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
-    count: 'text-amber-700', light: 'bg-amber-50 dark:bg-amber-900/20', ring: 'ring-amber-500',
-    btn: 'bg-amber-600 hover:bg-amber-700', accent: 'amber',
-  },
-  cyan: {
-    gradient: 'from-cyan-600 to-cyan-700', badge: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300',
-    count: 'text-cyan-700', light: 'bg-cyan-50 dark:bg-cyan-900/20', ring: 'ring-cyan-500',
-    btn: 'bg-cyan-600 hover:bg-cyan-700', accent: 'cyan',
-  },
-  rose: {
-    gradient: 'from-rose-600 to-rose-700', badge: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
-    count: 'text-rose-700', light: 'bg-rose-50 dark:bg-rose-900/20', ring: 'ring-rose-500',
-    btn: 'bg-rose-600 hover:bg-rose-700', accent: 'rose',
-  },
-  teal: {
-    gradient: 'from-teal-600 to-teal-700', badge: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300',
-    count: 'text-teal-700', light: 'bg-teal-50 dark:bg-teal-900/20', ring: 'ring-teal-500',
-    btn: 'bg-teal-600 hover:bg-teal-700', accent: 'teal',
-  },
-  pink: {
-    gradient: 'from-pink-600 to-pink-700', badge: 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300',
-    count: 'text-pink-700', light: 'bg-pink-50 dark:bg-pink-900/20', ring: 'ring-pink-500',
-    btn: 'bg-pink-600 hover:bg-pink-700', accent: 'pink',
-  },
-  purple: {
-    gradient: 'from-purple-600 to-purple-700', badge: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
-    count: 'text-purple-700', light: 'bg-purple-50 dark:bg-purple-900/20', ring: 'ring-purple-500',
-    btn: 'bg-purple-600 hover:bg-purple-700', accent: 'purple',
-  },
-};
-
 const STORAGE_PREFIX = 'wt_progress';
 
 function getStorageKey(weekId, day) {
@@ -177,7 +129,15 @@ export default function WeekPage() {
     if (user) {
       try {
         if (newCompleted) {
-          await handleItemCheck(user.id, week.id, day.day, index, true);
+          const dayTotal = day.reviewItems.length;
+          const checkedBefore = day.reviewItems.filter((_, i) => currentMap[`${day.day}-${i}`]).length;
+          const isDayComplete = (checkedBefore + 1) >= dayTotal && dayTotal > 0;
+
+          const result = await handleItemCheck(user.id, week.id, day.day, index, true);
+
+          if (isDayComplete && result?.current_streak > 0) {
+            notify('streak', { streak: result.current_streak });
+          }
         } else {
           const payload = {
             user_id: user.id, week_number: week.id, day: day.day,
@@ -204,7 +164,6 @@ export default function WeekPage() {
     );
   }
 
-  const style = weekStyles[week.color];
   const totalItems = week.days.reduce((s, d) => s + d.reviewItems.length, 0);
   const checkedCount = week.days.reduce((s, d) => s + d.reviewItems.filter((_, i) => checkedMap[`${d.day}-${i}`]).length, 0);
 
@@ -212,11 +171,11 @@ export default function WeekPage() {
     <div className="space-y-6">
       {/* Week Header */}
       <FadeIn>
-        <div className={`bg-gradient-to-r ${style.gradient} rounded-2xl p-6 sm:p-8 text-white shadow-xl`}>
+        <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
           <div className="flex items-start justify-between flex-wrap gap-4">
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-2">
-                <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${style.badge}`}>
+                <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
                   Phase {week.id}
                 </span>
                 <span className="text-white/60 text-xs">
@@ -281,7 +240,7 @@ export default function WeekPage() {
                 openDay === day.day
                   ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-700 shadow-sm'
                   : done
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300'
                   : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:bg-dark-800 dark:text-gray-300 dark:border-dark-600 dark:hover:border-dark-500 dark:hover:bg-dark-700'
               }`}
               title={`${day.title} (${dayChecked}/${dayTotal})`}
@@ -313,8 +272,8 @@ export default function WeekPage() {
               >
                 <summary className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-700 transition select-none list-none">
                   <div className="flex items-center gap-4 min-w-0">
-                    <div className={`w-9 h-9 rounded-lg ${style.light} flex items-center justify-center shrink-0`}>
-                      <span className={`text-xs font-bold ${style.count}`}>D{day.day}</span>
+                    <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center shrink-0">
+                      <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">D{day.day}</span>
                     </div>
                     <div className="min-w-0">
                       <h3 className="font-semibold text-gray-800 dark:text-gray-100 text-sm sm:text-base truncate">{day.title}</h3>
@@ -336,7 +295,7 @@ export default function WeekPage() {
                           })}
                         </span>
                         <span className="text-gray-300 dark:text-gray-500">|</span>
-                        <span className={dayChecked === dayTotal && dayTotal > 0 ? 'text-emerald-500 font-medium' : ''}>
+                        <span className={dayChecked === dayTotal && dayTotal > 0 ? 'text-indigo-600 dark:text-indigo-400 font-medium' : ''}>
                           {dayChecked}/{dayTotal}
                         </span>
                       </div>
@@ -351,9 +310,9 @@ export default function WeekPage() {
                   {/* Key Concepts */}
                   <div className="mt-4">
                     <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Key Concepts</p>
-                    <div className={`p-3 rounded-lg ${style.light} text-sm text-gray-700 dark:text-gray-200 leading-relaxed`}>
+                    <pre className="p-4 rounded-lg bg-gray-900 dark:bg-black text-sm text-gray-100 dark:text-gray-200 font-mono leading-relaxed whitespace-pre-wrap overflow-x-auto border border-gray-700/50">
                       {day.keyConcepts}
-                    </div>
+                    </pre>
                   </div>
 
                   {/* Review Items */}
@@ -366,14 +325,14 @@ export default function WeekPage() {
                           <label
                             key={j}
                             className={`flex items-start gap-2.5 p-2 rounded-lg transition-all cursor-pointer group/check ${
-                              checked ? 'bg-emerald-50/50 dark:bg-emerald-900/20' : 'hover:bg-gray-50 dark:hover:bg-dark-700'
+                              checked ? 'bg-indigo-50/50 dark:bg-indigo-900/20' : 'hover:bg-gray-50 dark:hover:bg-dark-700'
                             }`}
                           >
                             <input
                               type="checkbox"
                               checked={!!checked}
                               onChange={() => handleCheck(day, j)}
-                              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 accent-emerald-600 cursor-pointer dark:text-emerald-400"
+                              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 accent-indigo-600 cursor-pointer dark:text-indigo-400"
                             />
                             <span className={`text-sm transition-colors ${checked ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-600 dark:text-gray-300'}`}>
                               {item}
@@ -399,9 +358,9 @@ export default function WeekPage() {
                   {/* Project Idea */}
                   <div className="mt-4">
                     <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Mini Project</p>
-                    <div className="bg-gradient-to-r from-amber-50 dark:from-amber-900/20 to-orange-50 dark:to-dark-800 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-sm text-amber-800 dark:text-amber-300">
+                    <pre className="p-4 rounded-lg bg-gray-900 dark:bg-black text-sm text-green-400 dark:text-green-300 font-mono leading-relaxed whitespace-pre-wrap overflow-x-auto border border-gray-700/50">
                       {day.projectIdeas}
-                    </div>
+                    </pre>
                   </div>
                 </div>
               </details>
@@ -428,12 +387,12 @@ export default function WeekPage() {
         <div>
           {week.id < 9 ? (
             <Link to={`/week/${week.id + 1}`}
-              className={`text-sm text-white font-medium px-4 py-2 rounded-lg transition shadow ${style.btn}`}>
+              className="text-sm text-white font-medium px-4 py-2 rounded-lg transition shadow bg-indigo-600 hover:bg-indigo-700">
               Phase {week.id + 1} →
             </Link>
           ) : (
             <Link to="/projects"
-              className={`text-sm text-white font-medium px-4 py-2 rounded-lg transition shadow ${style.btn}`}>
+              className="text-sm text-white font-medium px-4 py-2 rounded-lg transition shadow bg-indigo-600 hover:bg-indigo-700">
               View Projects →
             </Link>
           )}

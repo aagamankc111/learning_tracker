@@ -58,10 +58,10 @@ export default function ReviewsPage() {
   return (
     <div className="space-y-6">
       <FadeIn>
-        <div className="bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
+        <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
           <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-medium mb-2">Spaced Repetition</span>
           <h1 className="text-2xl sm:text-3xl font-bold">Review Sessions</h1>
-          <p className="text-blue-100 mt-1 text-sm">
+          <p className="text-indigo-100 mt-1 text-sm">
             Anki-style spaced repetition. Review what you've learned at optimal intervals for long-term retention.
           </p>
           <div className="flex gap-3 mt-4">
@@ -89,12 +89,12 @@ export default function ReviewsPage() {
               <span className="dark:text-gray-400 text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Review {currentIndex + 1} of {dueReviews.length}
               </span>
-              <span className="dark:text-blue-400 text-xs text-blue-600 font-medium">
+              <span className="dark:text-indigo-400 text-xs text-indigo-600 font-medium">
                 Due: {currentReview.next_review_date}
               </span>
             </div>
             <div className="w-full dark:bg-dark-600 bg-gray-200 rounded-full h-2 mb-6">
-              <div className="h-full dark:bg-blue-600 bg-blue-500 rounded-full transition-all" style={{ width: `${((currentIndex + 1) / dueReviews.length) * 100}%` }} />
+              <div className="h-full dark:bg-indigo-600 bg-indigo-500 rounded-full transition-all" style={{ width: `${((currentIndex + 1) / dueReviews.length) * 100}%` }} />
             </div>
 
             <h3 className="dark:text-gray-100 text-lg font-semibold text-gray-800 mb-2">
@@ -107,7 +107,7 @@ export default function ReviewsPage() {
             {!showAnswer ? (
               <button
                 onClick={handleShowAnswer}
-                className="w-full py-3 dark:bg-blue-700 dark:hover:bg-blue-800 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
+                className="w-full py-3 dark:bg-indigo-700 dark:hover:bg-indigo-800 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition"
               >
                 Show Answer / Rate Recall
               </button>
@@ -122,10 +122,10 @@ export default function ReviewsPage() {
                       disabled={completing}
                       className={`text-left p-3 rounded-lg border text-sm transition ${
                         i < 3
-                          ? 'dark:border-red-800 dark:hover:bg-red-900/20 dark:text-red-300 border-red-200 hover:bg-red-50 text-red-700'
+                          ? 'dark:border-dark-600 dark:hover:bg-dark-700 dark:text-gray-300 border-gray-200 hover:bg-gray-50 text-gray-700'
                           : i < 5
-                          ? 'dark:border-amber-800 dark:hover:bg-amber-900/20 dark:text-amber-300 border-amber-200 hover:bg-amber-50 text-amber-700'
-                          : 'dark:border-emerald-800 dark:hover:bg-emerald-900/20 dark:text-emerald-300 border-emerald-200 hover:bg-emerald-50 text-emerald-700'
+                          ? 'dark:border-dark-600 dark:hover:bg-dark-700 dark:text-gray-300 border-gray-200 hover:bg-gray-50 text-gray-700'
+                          : 'dark:border-dark-600 dark:hover:bg-dark-700 dark:text-gray-300 border-gray-200 hover:bg-gray-50 text-gray-700'
                       } disabled:opacity-50`}
                     >
                       {i} — {label}
@@ -154,7 +154,7 @@ export default function ReviewsPage() {
             <p className="dark:text-gray-400 text-gray-500 text-sm mb-4">You reviewed {dueReviews.length} items.</p>
             <button
               onClick={handleRestart}
-              className="px-5 py-2 dark:bg-blue-700 dark:hover:bg-blue-800 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+              className="px-5 py-2 dark:bg-indigo-700 dark:hover:bg-indigo-800 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
             >
               Refresh & Check Again
             </button>

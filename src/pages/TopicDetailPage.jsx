@@ -1,26 +1,14 @@
+import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import curriculum from '../data/curriculum';
 import { getTopicEnrichment, hasEnrichment } from '../data/curriculum-enrichment';
 import FadeIn from '../components/common/FadeIn';
 
-const sectionStyles = {
-  indigo: 'from-indigo-50 dark:from-indigo-900/30 dark:to-dark-800',
-  emerald: 'from-emerald-50 dark:from-emerald-900/30 dark:to-dark-800',
-  red: 'from-red-50 dark:from-red-900/30 dark:to-dark-800',
-  amber: 'from-amber-50 dark:from-amber-900/30 dark:to-dark-800',
-  violet: 'from-violet-50 dark:from-violet-900/30 dark:to-dark-800',
-  teal: 'from-teal-50 dark:from-teal-900/30 dark:to-dark-800',
-  purple: 'from-purple-50 dark:from-purple-900/30 dark:to-dark-800',
-  cyan: 'from-cyan-50 dark:from-cyan-900/30 dark:to-dark-800',
-  rose: 'from-rose-50 dark:from-rose-900/30 dark:to-dark-800',
-  gray: 'from-gray-50 dark:from-gray-800/50 dark:to-dark-800',
-};
-
-function Section({ title, children, color = 'indigo' }) {
+function Section({ title, children }) {
   if (!children) return null;
   return (
     <div className="bg-white dark:bg-dark-800 rounded-xl shadow-sm border border-gray-100 dark:border-dark-700 overflow-hidden">
-      <div className={`px-5 py-3 border-b border-gray-50 dark:border-dark-700/50 bg-gradient-to-r ${sectionStyles[color] || sectionStyles.indigo}`}>
+      <div className="px-5 py-3 border-b border-gray-50 dark:border-dark-700/50 bg-gray-50 dark:bg-gray-800/30">
         <h3 className="font-semibold text-gray-800 dark:text-gray-100 text-sm">{title}</h3>
       </div>
       <div className="p-4 text-sm text-gray-700 dark:text-gray-200 leading-relaxed">{children}</div>
@@ -33,6 +21,71 @@ function CodeBlock({ children }) {
     <pre className="bg-gray-900 dark:bg-black text-green-400 p-3 rounded-lg overflow-x-auto text-xs font-mono leading-relaxed mt-2">
       {children}
     </pre>
+  );
+}
+
+function ContentBlock({ children }) {
+  return (
+    <pre className="bg-gray-900 dark:bg-black text-gray-100 dark:text-gray-200 p-4 rounded-lg overflow-x-auto text-sm font-mono leading-relaxed whitespace-pre-wrap border border-gray-700/50 mt-1">
+      {children}
+    </pre>
+  );
+}
+
+function getQuestionText(item) {
+  return typeof item === 'string' ? item : item.q;
+}
+
+function getAnswer(item) {
+  return typeof item === 'object' && item.a ? item.a : null;
+}
+
+function QuestionBlock({ item, index, isOpen, onToggle }) {
+  const qText = getQuestionText(item);
+  const answer = getAnswer(item);
+
+  return (
+    <div className="space-y-1">
+      <pre className="text-sm text-gray-100 dark:text-gray-200 font-mono leading-relaxed whitespace-pre-wrap bg-gray-900 dark:bg-black p-3 rounded-lg border border-gray-700/50 overflow-x-auto flex items-start justify-between gap-2">
+        <span>
+          <span className="text-indigo-400">Q{index + 1}:</span> {qText}
+        </span>
+        {answer && (
+          <button
+            onClick={() => onToggle(index)}
+            className="shrink-0 px-2 py-1 text-xs font-mono rounded bg-indigo-600/20 text-indigo-300 hover:bg-indigo-600/40 transition border border-indigo-700/50"
+          >
+            {isOpen ? 'hide' : 'answer'}
+          </button>
+        )}
+      </pre>
+      {answer && isOpen && (
+        <pre className="text-sm text-gray-300 font-mono leading-relaxed whitespace-pre-wrap bg-gray-900 dark:bg-black p-3 rounded-lg border border-gray-700/50 overflow-x-auto ml-4">
+          <span className="text-indigo-400">A{index + 1}:</span> {answer}
+        </pre>
+      )}
+    </div>
+  );
+}
+
+function QuestionCategory({ items, label }) {
+  const [openIndex, setOpenIndex] = useState(null);
+  if (!items || items.length === 0) return null;
+  return (
+    <div>
+      <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">{label}</p>
+      <div className="space-y-1">
+        {items.map((item, i) => (
+          <QuestionBlock
+            key={i}
+            item={item}
+            index={i}
+            isOpen={openIndex === i}
+            onToggle={(idx) => setOpenIndex(openIndex === idx ? null : idx)}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -120,14 +173,14 @@ export default function TopicDetailPage() {
         <>
           {enrichment.example && (
             <FadeIn>
-              <Section title="Example" color="indigo">
+              <Section title="Example" >
                 <p className="font-mono text-xs bg-gray-100 dark:bg-dark-700 px-2 py-1 rounded inline-block mb-2">$ {enrichment.example.command}</p>
                 <CodeBlock>{enrichment.example.output}</CodeBlock>
-                <p className="mt-2 text-gray-600 dark:text-gray-300">{enrichment.example.explanation}</p>
+                <ContentBlock>{enrichment.example.explanation}</ContentBlock>
                 {enrichment.example.productionMeaning && (
-                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg text-xs text-blue-800 dark:text-blue-300">
-                    <strong>Production meaning:</strong> {enrichment.example.productionMeaning}
-                  </div>
+                  <pre className="mt-3 p-3 bg-gray-900 dark:bg-black border border-cyan-700/50 rounded-lg text-sm font-mono leading-relaxed whitespace-pre-wrap overflow-x-auto text-cyan-300 dark:text-cyan-300">
+                    <strong className="text-cyan-400"># Production meaning:</strong>{'\n'}{enrichment.example.productionMeaning}
+                  </pre>
                 )}
               </Section>
             </FadeIn>
@@ -135,23 +188,17 @@ export default function TopicDetailPage() {
 
           {enrichment.productionScenario && (
             <FadeIn>
-              <Section title="Production Scenario" color="emerald">
-                <div className="flex items-start gap-2">
-                  <span className="text-emerald-500 mt-0.5 shrink-0">▶</span>
-                  <p>{enrichment.productionScenario}</p>
-                </div>
+              <Section title="Production Scenario" >
+                <ContentBlock >{enrichment.productionScenario}</ContentBlock>
               </Section>
             </FadeIn>
           )}
 
           {enrichment.failureScenario && (
             <FadeIn>
-              <Section title="Failure Scenario" color="red">
-                <div className="flex items-start gap-2 mb-2">
-                  <span className="text-red-500 dark:text-red-400 mt-0.5 shrink-0">⚠</span>
-                  <p>{enrichment.failureScenario.description}</p>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-2">
+              <Section title="Failure Scenario">
+                <ContentBlock >{enrichment.failureScenario.description}</ContentBlock>
+                <div className="flex flex-wrap gap-2 mt-3">
                   {enrichment.failureScenario.severity && (
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                       enrichment.failureScenario.severity === 'S1' ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' :
@@ -171,55 +218,43 @@ export default function TopicDetailPage() {
 
           {enrichment.troubleshootingFlow && (
             <FadeIn>
-              <Section title="Troubleshooting Flow" color="amber">
-                <ol className="space-y-2">
+              <Section title="Troubleshooting Flow" >
+                <div className="space-y-2">
                   {enrichment.troubleshootingFlow.map((step, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <span className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white ${
-                        step.startsWith('SYMPTOM') ? 'bg-red-500' :
-                        step.startsWith('CHECK') ? 'bg-blue-500' :
-                        step.startsWith('ROOT CAUSE') ? 'bg-amber-500' :
-                        step.startsWith('FIX') ? 'bg-emerald-500' :
-                        step.startsWith('PREVENTION') ? 'bg-indigo-500' :
-                        'bg-gray-400'
-                      }`}>{i + 1}</span>
-                      <span className="text-gray-700 dark:text-gray-200 text-sm">{step}</span>
-                    </li>
+                    <pre key={i} className="flex items-start gap-2 p-3 bg-gray-900 dark:bg-black rounded-lg border border-gray-700/50 text-sm font-mono leading-relaxed whitespace-pre-wrap overflow-x-auto">
+                      <span className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white bg-gray-500">{i + 1}</span>
+                      <span className="flex-1 text-gray-300">{step}</span>
+                    </pre>
                   ))}
-                </ol>
+                </div>
               </Section>
             </FadeIn>
           )}
 
           {enrichment.architectureView && (
             <FadeIn>
-              <Section title="Architecture View" color="violet">
-                <p>{enrichment.architectureView}</p>
+              <Section title="Architecture View">
+                <ContentBlock >{enrichment.architectureView}</ContentBlock>
               </Section>
             </FadeIn>
           )}
 
           {enrichment.lab && (
             <FadeIn>
-              <Section title="Lab" color="teal">
-                <p className="font-medium text-gray-800 dark:text-gray-100 mb-2">{enrichment.lab.description}</p>
-                <ol className="space-y-1.5 mb-3">
-                  {enrichment.lab.steps.map((step, i) => (
-                    <li key={i} className="flex items-start gap-2 text-xs">
-                      <span className="shrink-0 w-4 h-4 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[10px] font-bold dark:bg-teal-900/40 dark:text-teal-300">{i + 1}</span>
-                      <span className="text-gray-600 dark:text-gray-300">{step}</span>
-                    </li>
-                  ))}
-                </ol>
+              <Section title="Lab" >
+                <ContentBlock >{enrichment.lab.description}</ContentBlock>
+                <pre className="mt-3 bg-gray-900 dark:bg-black p-4 rounded-lg overflow-x-auto text-sm font-mono leading-relaxed whitespace-pre-wrap border border-gray-700/50 text-gray-300">
+                  {enrichment.lab.steps.map((s, i) => `# Step ${i + 1}: ${s}`).join('\n')}
+                </pre>
                 {enrichment.lab.expectedOutput && (
-                  <div className="p-2 bg-teal-50 border border-teal-100 rounded text-xs text-teal-800 mb-2 dark:bg-teal-900/20 dark:border-teal-800 dark:text-teal-300">
-                    <strong>Expected output:</strong> {enrichment.lab.expectedOutput}
-                  </div>
+                  <pre className="mt-2 p-3 bg-gray-900 dark:bg-black border border-gray-700/50 rounded-lg text-sm font-mono leading-relaxed whitespace-pre-wrap overflow-x-auto text-gray-300">
+                    <strong className="text-gray-400"># Expected output:</strong>{'\n'}{enrichment.lab.expectedOutput}
+                  </pre>
                 )}
                 {enrichment.lab.failureVariation && (
-                  <div className="p-2 bg-amber-50 border border-amber-100 rounded text-xs text-amber-800 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-300">
-                    <strong>Failure variation:</strong> {enrichment.lab.failureVariation}
-                  </div>
+                  <pre className="mt-2 p-3 bg-gray-900 dark:bg-black border border-gray-700/50 rounded-lg text-sm font-mono leading-relaxed whitespace-pre-wrap overflow-x-auto text-gray-300">
+                    <strong className="text-gray-400"># Failure variation:</strong>{'\n'}{enrichment.lab.failureVariation}
+                  </pre>
                 )}
               </Section>
             </FadeIn>
@@ -227,73 +262,13 @@ export default function TopicDetailPage() {
 
           {enrichment.interviewQuestions && (
             <FadeIn>
-              <Section title="Interview Questions" color="purple">
+              <Section title="Interview Questions" >
                 <div className="space-y-3">
-                  {enrichment.interviewQuestions.conceptual && (
-                    <div>
-                      <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Conceptual</p>
-                      <ul className="space-y-1">
-                        {enrichment.interviewQuestions.conceptual.map((q, i) => (
-                          <li key={i} className="flex items-start gap-2 text-sm">
-                            <span className="text-purple-500 dark:text-purple-400 mt-0.5">•</span>
-                            <span>{q}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {enrichment.interviewQuestions.practical && (
-                    <div>
-                      <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Practical</p>
-                      <ul className="space-y-1">
-                        {enrichment.interviewQuestions.practical.map((q, i) => (
-                          <li key={i} className="flex items-start gap-2 text-sm">
-                            <span className="text-purple-500 dark:text-purple-400 mt-0.5">•</span>
-                            <span>{q}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {enrichment.interviewQuestions.scenario && (
-                    <div>
-                      <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Scenario</p>
-                      <ul className="space-y-1">
-                        {enrichment.interviewQuestions.scenario.map((q, i) => (
-                          <li key={i} className="flex items-start gap-2 text-sm">
-                            <span className="text-purple-500 dark:text-purple-400 mt-0.5">•</span>
-                            <span>{q}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {enrichment.interviewQuestions.senior && (
-                    <div>
-                      <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Senior</p>
-                      <ul className="space-y-1">
-                        {enrichment.interviewQuestions.senior.map((q, i) => (
-                          <li key={i} className="flex items-start gap-2 text-sm">
-                            <span className="text-purple-500 dark:text-purple-400 mt-0.5">•</span>
-                            <span>{q}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {enrichment.interviewQuestions.systemDesign && (
-                    <div>
-                      <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">System Design</p>
-                      <ul className="space-y-1">
-                        {enrichment.interviewQuestions.systemDesign.map((q, i) => (
-                          <li key={i} className="flex items-start gap-2 text-sm">
-                            <span className="text-purple-500 dark:text-purple-400 mt-0.5">•</span>
-                            <span>{q}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                  <QuestionCategory items={enrichment.interviewQuestions.conceptual} label="Conceptual" />
+                  <QuestionCategory items={enrichment.interviewQuestions.practical} label="Practical" />
+                  <QuestionCategory items={enrichment.interviewQuestions.scenario} label="Scenario" />
+                  <QuestionCategory items={enrichment.interviewQuestions.senior} label="Senior" />
+                  <QuestionCategory items={enrichment.interviewQuestions.systemDesign} label="System Design" />
                 </div>
               </Section>
             </FadeIn>
@@ -301,24 +276,14 @@ export default function TopicDetailPage() {
 
           {enrichment.industryExamples && (
             <FadeIn>
-              <Section title="Industry Examples" color="cyan">
+              <Section title="Industry Examples" >
                 <div className="grid sm:grid-cols-2 gap-3">
                   {Object.entries(enrichment.industryExamples).map(([key, val]) => (
-                    <div key={key} className={`p-3 rounded-lg border ${
-                      key === 'startup' ? 'bg-gray-50 border-gray-200 dark:bg-dark-700/50 dark:border-dark-700' :
-                      key === 'midSize' ? 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800' :
-                      key === 'enterprise' ? 'bg-indigo-50 border-indigo-200 dark:bg-indigo-900/20 dark:border-indigo-800' :
-                      'bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800'
-                    }`}>
-                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium mb-1 ${
-                        key === 'startup' ? 'bg-gray-200 text-gray-700 dark:bg-gray-900/40 dark:text-gray-300' :
-                        key === 'midSize' ? 'bg-blue-200 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' :
-                        key === 'enterprise' ? 'bg-indigo-200 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' :
-                        'bg-purple-200 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
-                      }`}>
+                    <div key={key} className="p-3 rounded-lg border bg-gray-50 dark:bg-dark-700/50 border-gray-200 dark:border-dark-700">
+                      <span className="inline-block px-2 py-0.5 rounded text-xs font-medium mb-1 bg-gray-200 text-gray-700 dark:bg-gray-900/40 dark:text-gray-300">
                         {key === 'startup' ? 'Startup' : key === 'midSize' ? 'Mid-Size' : key === 'enterprise' ? 'Enterprise' : 'FAANG'}
                       </span>
-                      <p className="text-xs text-gray-700 dark:text-gray-200">{val}</p>
+                      <pre className="text-xs text-gray-300 dark:text-gray-200 font-mono leading-relaxed whitespace-pre-wrap bg-gray-900 dark:bg-black p-2 rounded border border-gray-700/50">{val}</pre>
                     </div>
                   ))}
                 </div>
@@ -328,25 +293,17 @@ export default function TopicDetailPage() {
 
           {enrichment.commonMistakes && (
             <FadeIn>
-              <Section title="Common Mistakes" color="rose">
+              <Section title="Common Mistakes" >
                 <div className="space-y-2">
                   {enrichment.commonMistakes.map((m, i) => (
-                    <div key={i} className={`p-3 rounded-lg border ${
-                      m.level === 'beginner' ? 'bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800' :
-                      m.level === 'production' ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800' :
-                      'bg-rose-50 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800'
-                    }`}>
+                    <div key={i} className="p-3 rounded-lg border bg-gray-50 dark:bg-dark-700/50 border-gray-200 dark:border-dark-700">
                       <div className="flex items-start gap-2">
-                        <span className="text-red-500 dark:text-red-400 mt-0.5 shrink-0">✗</span>
-                        <div>
-                          <p className="text-sm text-gray-800 dark:text-gray-100">{m.mistake}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                              m.level === 'beginner' ? 'bg-orange-200 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300' :
-                              m.level === 'production' ? 'bg-red-200 text-red-700 dark:bg-red-900/40 dark:text-red-300' :
-                              'bg-rose-200 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
-                            }`}>{m.level}</span>
-                            <span className="text-xs text-emerald-700 dark:text-emerald-400">→ {m.fix}</span>
+                        <span className="text-red-400 dark:text-red-400 mt-0.5 shrink-0">✗</span>
+                        <div className="flex-1">
+                          <pre className="text-sm text-gray-100 dark:text-gray-100 font-mono leading-relaxed whitespace-pre-wrap bg-gray-900 dark:bg-black p-3 rounded-lg border border-gray-700/50">{m.mistake}</pre>
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-200 text-gray-700 dark:bg-gray-900/40 dark:text-gray-300">{m.level}</span>
+                            <span className="text-xs text-green-400 font-mono">→ {m.fix}</span>
                           </div>
                         </div>
                       </div>
@@ -359,28 +316,12 @@ export default function TopicDetailPage() {
 
           {enrichment.bestPractices && (
             <FadeIn>
-              <Section title="Best Practices" color="emerald">
+              <Section title="Best Practices" >
                 <div className="grid sm:grid-cols-2 gap-2">
                   {enrichment.bestPractices.map((bp, i) => (
-                    <div key={i} className={`p-3 rounded-lg border ${
-                      bp.area === 'security' ? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20' :
-                      bp.area === 'performance' ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20' :
-                      bp.area === 'reliability' ? 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20' :
-                      bp.area === 'cost' ? 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20' :
-                      bp.area === 'monitoring' ? 'border-indigo-200 bg-indigo-50 dark:border-indigo-800 dark:bg-indigo-900/20' :
-                      bp.area === 'testing' ? 'border-purple-200 bg-purple-50 dark:border-purple-800 dark:bg-purple-900/20' :
-                      'border-gray-200 bg-gray-50 dark:border-dark-700 dark:bg-dark-700/50'
-                    }`}>
-                      <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium mb-1 ${
-                        bp.area === 'security' ? 'bg-red-200 text-red-700 dark:bg-red-900/40 dark:text-red-300' :
-                        bp.area === 'performance' ? 'bg-green-200 text-green-700 dark:bg-green-900/40 dark:text-green-300' :
-                        bp.area === 'reliability' ? 'bg-blue-200 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' :
-                        bp.area === 'cost' ? 'bg-amber-200 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' :
-                        bp.area === 'monitoring' ? 'bg-indigo-200 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' :
-                        bp.area === 'testing' ? 'bg-purple-200 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' :
-                        'bg-gray-200 text-gray-700 dark:bg-gray-900/40 dark:text-gray-300'
-                      }`}>{bp.area}</span>
-                      <p className="text-xs text-gray-700 dark:text-gray-200">{bp.practice}</p>
+                    <div key={i} className="p-3 rounded-lg border border-gray-200 bg-gray-50 dark:border-dark-700 dark:bg-dark-700/50">
+                      <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium mb-1 bg-gray-200 text-gray-700 dark:bg-gray-900/40 dark:text-gray-300">{bp.area}</span>
+                      <pre className="text-xs text-gray-300 dark:text-gray-200 font-mono leading-relaxed whitespace-pre-wrap bg-gray-900 dark:bg-black p-2 rounded border border-gray-700/50">{bp.practice}</pre>
                     </div>
                   ))}
                 </div>
@@ -390,7 +331,7 @@ export default function TopicDetailPage() {
 
           {enrichment.commandExpansions && (
             <FadeIn>
-              <Section title="Command Expansions" color="gray">
+              <Section title="Command Expansions">
                 <div className="space-y-3">
                   {enrichment.commandExpansions.map((ce, i) => (
                     <div key={i} className="border border-gray-200 rounded-lg overflow-hidden dark:border-dark-700">
@@ -399,7 +340,9 @@ export default function TopicDetailPage() {
                         <span className="text-xs text-gray-500 dark:text-gray-400">{ce.what}</span>
                       </div>
                       <div className="p-3 space-y-2">
-                        <p className="text-xs text-gray-600 dark:text-gray-300"><strong>Why:</strong> {ce.why}</p>
+                        <pre className="text-xs text-gray-300 font-mono leading-relaxed whitespace-pre-wrap bg-gray-900 dark:bg-black p-3 rounded-lg border border-gray-700/50">
+                          <strong className="text-indigo-400"># Why:</strong>{'\n'}{ce.why}
+                        </pre>
                         <div>
                           <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Example:</p>
                           <CodeBlock>$ {ce.command}{ce.example ? `\n${ce.example}` : ''}</CodeBlock>
@@ -410,11 +353,15 @@ export default function TopicDetailPage() {
                             <CodeBlock>{ce.output}</CodeBlock>
                           </div>
                         )}
-                        {ce.explanation && <p className="text-xs text-gray-600 dark:text-gray-300"><strong>Explanation:</strong> {ce.explanation}</p>}
+                        {ce.explanation && (
+                          <pre className="text-xs text-gray-300 font-mono leading-relaxed whitespace-pre-wrap bg-gray-900 dark:bg-black p-3 rounded-lg border border-gray-700/50">
+                            <strong className="text-indigo-400"># Explanation:</strong>{'\n'}{ce.explanation}
+                          </pre>
+                        )}
                         {ce.failure && (
-                          <div className="p-2 bg-red-50 border border-red-100 rounded text-xs text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300">
-                            <strong>Failure mode:</strong> {ce.failure}
-                          </div>
+                          <pre className="p-3 bg-gray-900 dark:bg-black border border-red-700/50 rounded-lg text-xs font-mono leading-relaxed whitespace-pre-wrap overflow-x-auto text-red-300">
+                            <strong className="text-red-400"># Failure mode:</strong>{'\n'}{ce.failure}
+                          </pre>
                         )}
                       </div>
                     </div>

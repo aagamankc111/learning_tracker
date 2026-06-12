@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase';
+import curriculum from '../data/curriculum';
 
 function todayStr() {
   return new Date().toISOString().split('T')[0];
@@ -7,23 +8,65 @@ function todayStr() {
 async function calculateStreak(userId) {
   const start = new Date();
   start.setDate(start.getDate() - 90);
-  const { data } = await supabase
-    .from('daily_log')
-    .select('log_date, items_completed')
+  const startStr = start.toISOString().split('T')[0];
+
+  const { data: progressData } = await supabase
+    .from('daily_progress')
+    .select('week_number, day, completed, updated_at')
     .eq('user_id', userId)
-    .gte('log_date', start.toISOString().split('T')[0])
-    .order('log_date', { ascending: false });
-  if (!data) return 0;
-  let streak = 0;
-  let expected = todayStr();
-  for (const log of data) {
-    if (log.log_date === expected && (log.items_completed || 0) > 0) {
-      streak++;
-      const d = new Date(expected);
-      d.setDate(d.getDate() - 1);
-      expected = d.toISOString().split('T')[0];
-    } else if (log.log_date < expected) break;
+    .eq('completed', true)
+    .gte('updated_at', startStr);
+
+  if (!progressData || progressData.length === 0) return 0;
+
+  const dayCounts = {};
+  for (const row of progressData) {
+    const key = `${row.week_number}_${row.day}`;
+    if (!dayCounts[key]) {
+      dayCounts[key] = { count: 0, date: null };
+    }
+    dayCounts[key].count++;
+    const rowDate = row.updated_at.split('T')[0];
+    if (!dayCounts[key].date || rowDate > dayCounts[key].date) {
+      dayCounts[key].date = rowDate;
+    }
   }
+
+  const dayTotals = {};
+  for (const week of curriculum.weeks) {
+    for (const d of week.days) {
+      dayTotals[`${week.id}_${d.day}`] = d.reviewItems.length;
+    }
+  }
+
+  const completedDates = new Set();
+  for (const [key, info] of Object.entries(dayCounts)) {
+    const total = dayTotals[key];
+    if (total > 0 && info.count >= total && info.date) {
+      completedDates.add(info.date);
+    }
+  }
+
+  if (completedDates.size === 0) return 0;
+
+  let streak = 0;
+  let missedDays = 0;
+  const today = todayStr();
+
+  for (let i = 0; i < 90; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().split('T')[0];
+
+    if (completedDates.has(dateStr)) {
+      streak++;
+      missedDays = 0;
+    } else {
+      missedDays++;
+      if (missedDays >= 2) break;
+    }
+  }
+
   return streak;
 }
 
@@ -52,7 +95,7 @@ export async function handleItemCheck(userId, weekId, day, itemIndex, completed)
     .select('*')
     .eq('user_id', userId)
     .eq('log_date', today)
-    .single();
+    .maybeSingle();
 
   const logUpdates = {
     items_completed: (existingLog?.items_completed || 0) + 1,
@@ -74,7 +117,7 @@ export async function handleItemCheck(userId, weekId, day, itemIndex, completed)
     .from('user_stats')
     .select('*')
     .eq('user_id', userId)
-    .single();
+    .maybeSingle();
 
   const statsUpdates = {
     total_xp: (existingStats?.total_xp || 0) + 5,
@@ -94,4 +137,27 @@ export async function handleItemCheck(userId, weekId, day, itemIndex, completed)
   if (usErr) throw usErr;
 
   return statsUpdates;
+}
+
+export async function validateStreakOnLoad(userId) {
+  const { data: stats } = await supabase
+    .from('user_stats')
+    .select('current_streak, last_active_date')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (!stats?.last_active_date) return;
+
+  const today = todayStr();
+  const lastActive = stats.last_active_date;
+
+  if (lastActive < today) {
+    const streak = await calculateStreak(userId);
+    if (streak !== stats.current_streak) {
+      await supabase
+        .from('user_stats')
+        .update({ current_streak: streak, updated_at: new Date().toISOString() })
+        .eq('user_id', userId);
+    }
+  }
 }

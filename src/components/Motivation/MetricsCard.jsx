@@ -17,7 +17,7 @@ export default function MetricsCard({ compact = false }) {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="bg-gradient-to-br from-indigo-50 dark:from-indigo-900/20 to-white dark:to-dark-800 rounded-lg p-3 border border-indigo-100 dark:border-indigo-800">
+          <div className="bg-white dark:bg-dark-800 rounded-lg p-3 border border-gray-100 dark:border-dark-700">
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Mastery Score</span>
               <span className="text-emerald-500 text-xs">{trendIcons[velocityTrend.trend]}</span>
@@ -31,20 +31,20 @@ export default function MetricsCard({ compact = false }) {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-emerald-50 dark:from-emerald-900/20 to-white dark:to-dark-800 rounded-lg p-3 border border-emerald-100 dark:border-emerald-800">
+          <div className="bg-white dark:bg-dark-800 rounded-lg p-3 border border-gray-100 dark:border-dark-700">
             <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Consistency</span>
-            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{consistencyScore}%</div>
+            <div className="text-2xl font-bold text-gray-600 dark:text-gray-400 mt-1">{consistencyScore}%</div>
             <div className="w-full bg-gray-200 dark:bg-dark-600 rounded-full h-1.5 mt-2">
-              <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${consistencyScore}%` }} />
+              <div className="bg-indigo-500 h-full rounded-full" style={{ width: `${consistencyScore}%` }} />
             </div>
             <div className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">
               {consistencyScore >= 80 ? 'Elite consistency 🔥' : consistencyScore >= 50 ? 'Building momentum 💪' : 'Getting started 🌱'}
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-amber-50 dark:from-amber-900/20 to-white dark:to-dark-800 rounded-lg p-3 border border-amber-100 dark:border-amber-800">
+          <div className="bg-white dark:bg-dark-800 rounded-lg p-3 border border-gray-100 dark:border-dark-700">
             <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Velocity</span>
-            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">
+            <div className="text-2xl font-bold text-gray-600 dark:text-gray-400 mt-1">
               {velocity?.itemsPerDay || 0}
               <span className="text-xs text-gray-400 dark:text-gray-500 font-normal">/day</span>
             </div>
@@ -56,9 +56,9 @@ export default function MetricsCard({ compact = false }) {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-violet-50 dark:from-violet-900/20 to-white dark:to-dark-800 rounded-lg p-3 border border-violet-100 dark:border-violet-800">
+          <div className="bg-white dark:bg-dark-800 rounded-lg p-3 border border-gray-100 dark:border-dark-700">
             <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Time Invested</span>
-            <div className="text-2xl font-bold text-violet-600 dark:text-violet-400 mt-1">
+            <div className="text-2xl font-bold text-gray-600 dark:text-gray-400 mt-1">
               {velocity?.totalMinutes || 0}
               <span className="text-xs text-gray-400 dark:text-gray-500 font-normal">min</span>
             </div>

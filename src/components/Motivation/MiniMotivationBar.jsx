@@ -21,7 +21,7 @@ export default function MiniMotivationBar({ compact = false }) {
     })[0];
 
   return (
-    <div className={`bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-xl text-white shadow-lg ${compact ? 'p-3' : 'p-4'}`}>
+    <div className={`bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-xl text-white shadow-lg ${compact ? 'p-3' : 'p-4'}`}>
       {compact ? (
         <div className="flex items-center justify-between gap-3 text-xs">
           <span className="flex items-center gap-1.5 shrink-0">
@@ -29,9 +29,9 @@ export default function MiniMotivationBar({ compact = false }) {
             <span className="font-medium hidden sm:inline">{currentRank.title}</span>
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="text-amber-300 font-bold">Lv.{level}</span>
+            <span className="text-white/90 font-bold">Lv.{level}</span>
             <span className="text-white/60">·</span>
-            <span className="text-emerald-300">{stats?.current_streak || 0}🔥</span>
+            <span className="text-white/90">{stats?.current_streak || 0}🔥</span>
           </span>
           <span className="text-white/70 truncate flex-1 text-center hidden sm:block">
             {streakMessage?.split('.')[0]}
@@ -54,15 +54,15 @@ export default function MiniMotivationBar({ compact = false }) {
             </div>
             <div className="flex items-center gap-3 text-xs">
               <span className="flex items-center gap-1">
-                <span className="text-amber-300 font-bold">{stats?.total_xp || 0}</span>
+                <span className="text-white/90 font-bold">{stats?.total_xp || 0}</span>
                 <span className="text-white/60">XP</span>
               </span>
               <span className="flex items-center gap-1">
-                <span className="text-emerald-300 font-bold">{stats?.current_streak || 0}</span>
+                <span className="text-white/90 font-bold">{stats?.current_streak || 0}</span>
                 <span className="text-white/60">day streak</span>
               </span>
               <span className="flex items-center gap-1">
-                <span className="text-indigo-200 font-bold">{earnedAchievementIds.size}</span>
+                <span className="text-white/70 font-bold">{earnedAchievementIds.size}</span>
                 <span className="text-white/60">achievements</span>
               </span>
             </div>

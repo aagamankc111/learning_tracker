@@ -60,10 +60,10 @@ export default function AuthForm({ onSuccess }) {
         </button>
 
         {error && (
-          <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm">{error}</div>
+          <div className="mb-4 p-3 rounded-lg bg-gray-50 dark:bg-dark-700/50 border border-gray-200 dark:border-dark-700 text-gray-700 dark:text-gray-300 text-sm">{error}</div>
         )}
         {info && (
-          <div className="mb-4 p-3 rounded-lg bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 text-sm">{info}</div>
+          <div className="mb-4 p-3 rounded-lg bg-gray-50 dark:bg-dark-700/50 border border-gray-200 dark:border-dark-700 text-gray-700 dark:text-gray-300 text-sm">{info}</div>
         )}
 
         <form onSubmit={handleSignIn} className="space-y-4">

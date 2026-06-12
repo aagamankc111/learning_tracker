@@ -40,12 +40,18 @@ export function useQuiz() {
     if (currentIndex + 1 >= qs.length) {
       setFinished(true);
       if (user) {
+        const finalScore = isCorrect ? score + 1 : score;
         recordQuizAttempt(
           user.id,
           'topic_quiz',
-          isCorrect ? score + 1 : score,
+          finalScore,
           qs.length
-        );
+        ).then(() => {
+          window.dispatchEvent(new CustomEvent('progress-updated'));
+          if (finalScore === qs.length) {
+            window.dispatchEvent(new CustomEvent('quiz-perfect'));
+          }
+        });
       }
     } else {
       setCurrentIndex((i) => i + 1);

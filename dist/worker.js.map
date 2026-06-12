@@ -1,0 +1,8 @@
+{
+  "version": 3,
+  "sources": ["../worker.js"],
+  "sourceRoot": "dist",
+  "sourcesContent": ["export default {\n  async fetch(request, env, ctx) {\n    const url = new URL(request.url);\n    const path = url.pathname;\n\n    const response = await env.ASSETS.fetch(request);\n    if (response.status !== 404) return response;\n\n    url.pathname = '/index.html';\n    return env.ASSETS.fetch(new Request(url, request));\n  },\n};\n"],
+  "mappings": ";AAAA,IAAO,iBAAQ;AAAA,EACb,MAAM,MAAM,SAAS,KAAK,KAAK;AAC7B,UAAM,MAAM,IAAI,IAAI,QAAQ,GAAG;AAC/B,UAAM,OAAO,IAAI;AAEjB,UAAM,WAAW,MAAM,IAAI,OAAO,MAAM,OAAO;AAC/C,QAAI,SAAS,WAAW,IAAK,QAAO;AAEpC,QAAI,WAAW;AACf,WAAO,IAAI,OAAO,MAAM,IAAI,QAAQ,KAAK,OAAO,CAAC;AAAA,EACnD;AACF;",
+  "names": []
+}

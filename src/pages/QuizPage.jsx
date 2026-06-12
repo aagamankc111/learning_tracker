@@ -121,10 +121,10 @@ export default function QuizPage() {
     return (
       <div className="space-y-6">
         <FadeIn>
-          <div className="bg-gradient-to-r from-violet-600 to-violet-700 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
+          <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
             <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-medium mb-2">Practice</span>
             <h1 className="text-2xl sm:text-3xl font-bold">Knowledge Quiz</h1>
-            <p className="text-violet-100 mt-1 text-sm">
+            <p className="text-indigo-100 mt-1 text-sm">
               {stats.totalQuestions}+ questions across all 9 phases. Industry interview questions, scenarios, and certification prep.
             </p>
             <div className="flex flex-wrap gap-2 mt-4">
@@ -149,7 +149,7 @@ export default function QuizPage() {
                     <button
                       onClick={() => setMode('standard')}
                       className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition ${
-                        mode === 'standard' ? 'bg-white text-violet-700 shadow-sm dark:bg-dark-800' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                        mode === 'standard' ? 'bg-white text-indigo-700 shadow-sm dark:bg-dark-800' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                       }`}
                     >
                       Standard
@@ -157,7 +157,7 @@ export default function QuizPage() {
                     <button
                       onClick={() => setMode('interview')}
                       className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition ${
-                        mode === 'interview' ? 'bg-white text-violet-700 shadow-sm dark:bg-dark-800' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                        mode === 'interview' ? 'bg-white text-indigo-700 shadow-sm dark:bg-dark-800' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                       }`}
                     >
                       Interview Prep
@@ -170,7 +170,7 @@ export default function QuizPage() {
                 <select
                   value={selectedPhase}
                   onChange={(e) => setSelectedPhase(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none dark:border-dark-600 dark:bg-dark-800 dark:text-gray-200"
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none dark:border-dark-600 dark:bg-dark-800 dark:text-gray-200"
                 >
                   <option value="">All Phases</option>
                   {PHASES.map((p) => (
@@ -183,7 +183,7 @@ export default function QuizPage() {
                 <select
                   value={selectedDifficulty}
                   onChange={(e) => setSelectedDifficulty(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-violet-500 outline-none dark:border-dark-600 dark:bg-dark-800 dark:text-gray-200"
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none dark:border-dark-600 dark:bg-dark-800 dark:text-gray-200"
                 >
                   {DIFFICULTIES.map((d) => (
                     <option key={d.value} value={d.value}>{d.label}</option>
@@ -193,7 +193,7 @@ export default function QuizPage() {
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-violet-500 outline-none dark:border-dark-600 dark:bg-dark-800 dark:text-gray-200"
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none dark:border-dark-600 dark:bg-dark-800 dark:text-gray-200"
                 >
                   {CATEGORIES.map((c) => (
                     <option key={c.value} value={c.value}>{c.label}</option>
@@ -203,7 +203,7 @@ export default function QuizPage() {
                 <select
                   value={count}
                   onChange={(e) => setCount(Number(e.target.value))}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-violet-500 outline-none dark:border-dark-600 dark:bg-dark-800 dark:text-gray-200"
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none dark:border-dark-600 dark:bg-dark-800 dark:text-gray-200"
                 >
                   {QUESTION_COUNTS.map((n) => (
                     <option key={n} value={n}>{n} questions</option>
@@ -213,7 +213,7 @@ export default function QuizPage() {
 
               <button
                 onClick={handleStart}
-                className="px-6 py-2.5 bg-violet-600 text-white rounded-lg text-sm font-medium hover:bg-violet-700 transition shadow"
+                className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow"
               >
                 {mode === 'interview' ? '🎯 Start Interview Prep' : '🎲 Start Quiz'}
               </button>
@@ -224,7 +224,7 @@ export default function QuizPage() {
         <FadeIn delay={150}>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 dark:bg-dark-800 dark:border-dark-700">
-              <div className="text-2xl font-bold text-violet-600 dark:text-violet-400">{stats.totalQuestions}</div>
+              <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{stats.totalQuestions}</div>
               <div className="text-xs text-gray-500 mt-1 dark:text-gray-400">Total Questions</div>
               <div className="text-[10px] text-gray-400 mt-0.5 dark:text-gray-500">Across all 9 phases</div>
             </div>
@@ -278,7 +278,7 @@ export default function QuizPage() {
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
                 Question {currentIndex + 1} of {totalQuestions}
               </span>
-              <span className="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium dark:bg-violet-900/40 dark:text-violet-300">
+              <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded text-xs font-medium dark:bg-indigo-900/40 dark:text-indigo-300">
                 {score}/{currentIndex}
               </span>
             </div>
@@ -299,7 +299,7 @@ export default function QuizPage() {
 
           <div className="w-full bg-gray-200 rounded-full h-2 mb-6 dark:bg-dark-600">
             <div
-              className="h-full bg-violet-500 rounded-full transition-all"
+              className="h-full bg-indigo-500 rounded-full transition-all"
               style={{ width: `${((currentIndex + 1) / totalQuestions) * 100}%` }}
             />
           </div>
@@ -308,7 +308,7 @@ export default function QuizPage() {
 
           <div className="space-y-2">
             {currentQuestion.options.map((opt, i) => {
-              let btnClass = 'border-gray-200 hover:border-violet-300 hover:bg-violet-50 dark:border-dark-600 dark:hover:border-violet-600 dark:hover:bg-violet-900/20';
+              let btnClass = 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 dark:border-dark-600 dark:hover:border-indigo-600 dark:hover:bg-indigo-900/20';
               if (selectedAnswer !== null) {
                 if (opt === currentQuestion.correctAnswer) {
                   btnClass = 'border-emerald-400 bg-emerald-50 ring-2 ring-emerald-300 dark:bg-emerald-900/20 dark:ring-emerald-600';
@@ -353,7 +353,7 @@ export default function QuizPage() {
               )}
               <button
                 onClick={handleNext}
-                className="mt-3 px-4 py-1.5 bg-violet-600 text-white rounded-lg text-xs font-medium hover:bg-violet-700 transition"
+                className="mt-3 px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-700 transition"
               >
                 {currentIndex + 1 >= totalQuestions ? 'See Results' : 'Next Question →'}
               </button>
@@ -377,7 +377,7 @@ export default function QuizPage() {
           </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2 dark:text-gray-100">Quiz Complete!</h2>
           <p className="text-lg text-gray-600 mb-2 dark:text-gray-300">
-            You scored <strong className="text-violet-600 dark:text-violet-400">{score}/{totalQuestions}</strong> ({pct}%)
+            You scored <strong className="text-indigo-600 dark:text-indigo-400">{score}/{totalQuestions}</strong> ({pct}%)
           </p>
           <p className="text-sm text-gray-400 mb-4 dark:text-gray-500">
             {pct === 100 ? 'Perfect score! You\'re a master!' :
@@ -398,7 +398,7 @@ export default function QuizPage() {
             </div>
             <div className="w-px h-10 bg-gray-200 dark:bg-dark-600" />
             <div className="text-center">
-              <div className="text-2xl font-bold text-violet-600 dark:text-violet-400">{pct}%</div>
+              <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{pct}%</div>
               <div className="text-xs text-gray-500 dark:text-gray-400">Score</div>
             </div>
           </div>
@@ -406,7 +406,7 @@ export default function QuizPage() {
           <div className="w-full bg-gray-200 rounded-full h-3 max-w-md mx-auto mb-6 dark:bg-dark-600">
             <div
               className={`h-full rounded-full transition-all ${
-                pct === 100 ? 'bg-emerald-500' : pct >= 60 ? 'bg-violet-500' : 'bg-amber-500'
+                pct === 100 ? 'bg-emerald-500' : pct >= 60 ? 'bg-indigo-500' : 'bg-amber-500'
               }`}
               style={{ width: `${pct}%` }}
             />
@@ -415,7 +415,7 @@ export default function QuizPage() {
           <div className="flex items-center justify-center gap-3">
             <button
               onClick={handleRetry}
-              className="px-5 py-2 bg-violet-600 text-white rounded-lg text-sm font-medium hover:bg-violet-700 transition"
+              className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
             >
               Take Another Quiz
             </button>

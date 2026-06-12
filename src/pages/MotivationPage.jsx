@@ -41,10 +41,10 @@ export default function MotivationPage() {
   return (
     <div className="space-y-6">
       <FadeIn>
-        <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
+        <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
           <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-medium mb-2">💪 Motivation System</span>
           <h1 className="text-2xl sm:text-3xl font-bold">Your Journey to God Tier</h1>
-          <p className="text-purple-100 mt-1 text-sm max-w-2xl">
+          <p className="text-indigo-100 mt-1 text-sm max-w-2xl">
             Track your rank progression, journey milestones, and data-centric metrics.
             Every checkbox, every quiz, every review moves you closer to becoming a God Tier MLOps Architect.
           </p>
@@ -78,7 +78,7 @@ export default function MotivationPage() {
         <div className="space-y-6">
           {/* Motivation Banner */}
           <FadeIn delay={50}>
-            <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl p-5 text-white shadow-xl">
+            <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-2xl p-5 text-white shadow-xl">
               <div className="flex items-start gap-4 flex-wrap">
                 <div className="bg-white/20 rounded-xl p-3 text-center min-w-[80px]">
                   <div className="text-2xl">💪</div>
@@ -113,15 +113,15 @@ export default function MotivationPage() {
                     <div className="text-xs text-gray-400">Day Streak</div>
                   </div>
                   <div className="bg-white/5 rounded-lg p-3">
-                    <div className="text-2xl font-bold text-emerald-400">{consistencyScore}%</div>
+                    <div className="text-2xl font-bold text-gray-300">{consistencyScore}%</div>
                     <div className="text-xs text-gray-400">Consistency</div>
                   </div>
                   <div className="bg-white/5 rounded-lg p-3">
-                    <div className="text-2xl font-bold text-amber-400">{masteryScore}%</div>
+                    <div className="text-2xl font-bold text-gray-300">{masteryScore}%</div>
                     <div className="text-xs text-gray-400">Mastery</div>
                   </div>
                   <div className="bg-white/5 rounded-lg p-3">
-                    <div className="text-2xl font-bold text-violet-400">{journeyProgress}%</div>
+                    <div className="text-2xl font-bold text-gray-300">{journeyProgress}%</div>
                     <div className="text-xs text-gray-400">Journey</div>
                   </div>
                 </div>
@@ -181,7 +181,7 @@ export default function MotivationPage() {
                       isCurrent
                         ? 'dark:bg-indigo-900/30 border-indigo-400 bg-indigo-50 shadow-md'
                         : isUnlocked
-                        ? 'dark:border-emerald-800 dark:bg-emerald-900/20 border-emerald-200 bg-emerald-50/50'
+                        ? 'dark:border-dark-600 dark:bg-dark-700/50 border-gray-300 bg-gray-50'
                         : 'dark:border-dark-700 dark:bg-dark-700/50 border-gray-200 bg-gray-50'
                     }`}
                   >

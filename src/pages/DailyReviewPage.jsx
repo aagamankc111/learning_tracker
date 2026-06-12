@@ -15,7 +15,7 @@ export default function DailyReviewPage() {
   return (
     <div className="space-y-6">
       <FadeIn>
-        <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
+        <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
           <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-medium mb-2">Daily Practice</span>
           <h1 className="text-2xl sm:text-3xl font-bold">Daily Review & Revision</h1>
           <p className="text-white/80 mt-1 text-sm max-w-xl">
@@ -58,10 +58,10 @@ export default function DailyReviewPage() {
                 <div className="p-4 space-y-2">
                   {items.map((item, j) => (
                     <div key={j} className="text-xs">
-                      <code className="block bg-gray-900 dark:bg-dark-900 text-green-400 dark:text-green-300 px-3 py-1.5 rounded-lg font-mono text-[11px] leading-relaxed">
-                        $ {item.cmd}
-                      </code>
-                      <p className="text-gray-500 dark:text-gray-400 mt-0.5 px-1">{item.desc}</p>
+                      <pre className="bg-gray-900 dark:bg-black text-green-400 dark:text-green-300 px-3 py-2 rounded-lg font-mono text-xs leading-relaxed whitespace-pre-wrap overflow-x-auto border border-gray-700/50">
+$ {item.cmd}
+                      </pre>
+                      <pre className="text-gray-300 dark:text-gray-400 mt-1 px-2 font-mono text-[11px] leading-relaxed whitespace-pre-wrap bg-gray-900/50 dark:bg-black/50 p-1.5 rounded border border-gray-700/30"># {item.desc}</pre>
                     </div>
                   ))}
                 </div>
@@ -83,10 +83,10 @@ export default function DailyReviewPage() {
                 {quickReferenceStatusCodes.map((s) => (
                   <div key={s.code} className="flex items-center gap-2 p-1.5 rounded hover:bg-gray-50 dark:hover:bg-dark-700 text-xs">
                     <span className={`font-mono font-bold px-1.5 py-0.5 rounded text-[10px] ${
-                      s.code < 300 ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300' :
-                      s.code < 400 ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' :
-                      s.code < 500 ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300' :
-                      'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300'
+                      s.code < 300 ? 'bg-gray-100 text-gray-700 dark:bg-dark-700 dark:text-gray-300' :
+                      s.code < 400 ? 'bg-gray-100 text-gray-700 dark:bg-dark-700 dark:text-gray-300' :
+                      s.code < 500 ? 'bg-gray-100 text-gray-700 dark:bg-dark-700 dark:text-gray-300' :
+                      'bg-gray-100 text-gray-700 dark:bg-dark-700 dark:text-gray-300'
                     }`}>
                       {s.code}
                     </span>
@@ -139,7 +139,7 @@ export default function DailyReviewPage() {
                   <div className="text-lg font-bold text-indigo-600 dark:text-indigo-400">L{l.layer}</div>
                   <div className="text-xs font-semibold text-gray-800 dark:text-gray-100 mt-0.5">{l.name}</div>
                   <div className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">{l.example}</div>
-                  <div className="text-[10px] text-red-500 dark:text-red-400 mt-0.5">⚠ {l.security}</div>
+                  <div className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">⚠ {l.security}</div>
                 </div>
               ))}
             </div>

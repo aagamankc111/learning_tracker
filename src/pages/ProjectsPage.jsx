@@ -2,15 +2,15 @@ import { majorProjects, industryInsights } from '../data/curriculum';
 import FadeIn from '../components/common/FadeIn';
 
 const difficultyColors = {
-  Advanced: 'bg-violet-100 text-violet-700',
-  'Intermediate-Advanced': 'bg-emerald-100 text-emerald-700',
+  Advanced: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+  'Intermediate-Advanced': 'bg-gray-100 text-gray-700 dark:bg-dark-700 dark:text-gray-300',
 };
 
 export default function ProjectsPage() {
   return (
     <div className="space-y-6">
       <FadeIn>
-        <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
+        <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
           <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-medium mb-2">Portfolio</span>
           <h1 className="text-2xl sm:text-3xl font-bold">3 Flagship Projects</h1>
           <p className="text-white/80 mt-1 text-sm max-w-2xl">
@@ -56,7 +56,7 @@ export default function ProjectsPage() {
                   </div>
                   <div className="text-right">
                     <span className="text-3xl block">{['🤖', '🏗️', '🔒'][i]}</span>
-                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{project.salary}</span>
+                    <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">{project.salary}</span>
                   </div>
                 </div>
 
@@ -75,7 +75,7 @@ export default function ProjectsPage() {
                   <ul className="space-y-1.5">
                     {project.highlights.map((h, j) => (
                       <li key={j} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300">
-                        <svg className="w-4 h-4 text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-indigo-500 dark:text-indigo-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
                         {h}

@@ -1,7 +1,8 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
-import { NotificationProvider } from './context/NotificationContext';
+import { NotificationProvider, useNotifications } from './context/NotificationContext';
 import AuthForm from './components/Auth/AuthForm';
 import PageLayout from './components/Layout/PageLayout';
 import Home from './pages/Home';
@@ -20,6 +21,17 @@ import LoadingSpinner from './components/common/LoadingSpinner';
 
 function ProtectedRoutes() {
   const { user, loading } = useAuth();
+  const { notify } = useNotifications();
+
+  useEffect(() => {
+    const handler = (e) => {
+      for (const ach of e.detail) {
+        notify('achievement', ach);
+      }
+    };
+    window.addEventListener('achievement-earned', handler);
+    return () => window.removeEventListener('achievement-earned', handler);
+  }, [notify]);
 
   if (loading) {
     return (

@@ -12,8 +12,7 @@ export default function GodTierDashboard() {
 
   return (
     <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-5 text-white shadow-xl overflow-hidden relative">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-bl-full" />
-      <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-amber-500/5 to-orange-500/5 rounded-tr-full" />
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-500/10 to-indigo-500/10 rounded-bl-full" />
 
       <div className="relative">
         <div className="flex items-start justify-between flex-wrap gap-4">
@@ -22,7 +21,7 @@ export default function GodTierDashboard() {
               <span className="inline-block px-2 py-0.5 bg-indigo-500/20 rounded-full text-xs text-indigo-300 font-medium">
                 Rank Progression
               </span>
-              <span className="inline-block px-2 py-0.5 bg-amber-500/20 rounded-full text-xs text-amber-300 font-medium">
+              <span className="inline-block px-2 py-0.5 bg-indigo-500/20 rounded-full text-xs text-indigo-300 font-medium">
                 Level {level}
               </span>
             </div>
@@ -30,7 +29,7 @@ export default function GodTierDashboard() {
           </div>
 
           <div className="text-right">
-            <div className="text-3xl font-bold bg-gradient-to-r from-amber-300 to-orange-400 bg-clip-text text-transparent">
+            <div className="text-3xl font-bold text-gray-100">
               {stats?.total_xp || 0}
             </div>
             <div className="text-xs text-gray-400">Total XP</div>
@@ -48,7 +47,7 @@ export default function GodTierDashboard() {
             </div>
             <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-700"
+                className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-indigo-600 transition-all duration-700"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -62,11 +61,11 @@ export default function GodTierDashboard() {
             <div className="text-[10px] text-gray-400">Day Streak</div>
           </div>
           <div className="bg-white/5 rounded-lg p-2 text-center">
-            <div className="text-lg font-bold text-emerald-400">{level}</div>
+            <div className="text-lg font-bold text-gray-300">{level}</div>
             <div className="text-[10px] text-gray-400">Level</div>
           </div>
           <div className="bg-white/5 rounded-lg p-2 text-center">
-            <div className="text-lg font-bold text-amber-400">{earnedAchievementIds.size}</div>
+            <div className="text-lg font-bold text-gray-300">{earnedAchievementIds.size}</div>
             <div className="text-[10px] text-gray-400">Achievements</div>
           </div>
         </div>

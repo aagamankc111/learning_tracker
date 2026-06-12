@@ -62,15 +62,16 @@
             'DNS resolution flow: cache → resolver → root → TLD → authoritative',
             'HTTP status codes: 200, 201, 301, 400, 401, 403, 404, 429, 500, 502, 503',
             'TLS 1.3 handshake steps',
-            'Common ports: 22, 80, 443, 53, 5432, 6379, 27017',
+            'Common ports: 22 (SSH), 80 (HTTP), 443 (HTTPS), 53 (DNS), 5432 (PostgreSQL), 6379 (Redis), 27017 (MongoDB), 8000/8080 (dev servers), 5000 (ML API), 3000 (frontend dev)',
+            'Why ports matter for containers: port publishing (-p host_port:container_port), port conflicts (two containers can\'t share host port), ephemeral ports (docker uses random high ports if -p without host port), service discovery needs to know the port, firewall must open the port for external access',
           ],
           keyCommands: ['curl -I https://api.example.com', 'dig google.com A +trace', 'nc -zv google.com 443', 'iptables -L -n -v', 'tcpdump -i eth0 port 80'],
-          keyConcepts: 'OSI model memorization (quiz yourself daily), TCP vs UDP differences, DNS resolution lifecycle, HTTP request/response structure, TLS handshake, iptables rules. This is the #1 networking interview topic.',
+          keyConcepts: 'OSI model memorization (quiz yourself daily), TCP vs UDP differences, DNS resolution lifecycle, HTTP request/response structure, TLS handshake, iptables rules. CRITICAL: understand ports deeply — every container, every cloud service, every firewall exposes or blocks ports. Port conflicts and port publishing are among the most common Docker/cloud deployment bugs. This is the #1 networking interview topic.',
           projectIdeas: 'Network Traffic Analyzer: Use tcpdump to capture traffic to your app, then write a Python script using scapy to parse the pcap, extract HTTP methods, status codes, response times, and flag anomalies.',
         },
         {
-          day: 5, title: 'Python for Infrastructure',
-          topics: ['Data Structures', 'OOP', 'File Handling & Logging', 'FastAPI', 'Automation Scripts'],
+          day: 5, title: 'Python for Infrastructure & Basic ML Concepts',
+          topics: ['Data Structures', 'OOP & File Handling', 'FastAPI', 'Automation Scripts', 'Basic ML Concepts'],
           subtopicIds: [],
           reviewItems: [
             'Lists, dicts, sets, tuples — time complexity',
@@ -78,9 +79,14 @@
             'logging module: FileHandler + StreamHandler + formatters',
             'FastAPI: Pydantic models, Depends, BackgroundTasks, middleware',
             'subprocess.run, shutil, pathlib, retry with exponential backoff',
+            'What is a model? A function that maps input → output by learning patterns from data (y = f(x)), "training" = finding the best f(), "inference" = using the trained f() on new inputs',
+            'Training vs Inference: training needs backwards pass (gradients, optimizer) and lots of compute/GPU, inference only needs forward pass (just the model weights) and is fast/cheap — this distinction is why we separate training and inference infrastructure',
+            'Tensors basic idea: multi-dimensional arrays (scalar=0D, vector=1D, matrix=2D, image batch=4D [batch, channels, height, width]), tensors are the currency of ML — all data becomes tensors, all operations happen on tensors, GPU is fast at tensor math (matrix multiply is the core operation)',
+            'CNN vs Transformer (conceptual): CNN scans local patterns with sliding windows (good for images, edges → shapes → objects), Transformer computes attention between ALL positions simultaneously (good for text/sequences, captures long-range relationships), both are "feature extractors" that feed into a classifier head',
+            'Why this matters for infrastructure: models need different hardware (GPU vs CPU), different latency profiles (milliseconds vs seconds), different batching strategies, different memory footprints — understanding the model type tells you what infra you need',
           ],
           keyCommands: ['pip install fastapi uvicorn', 'uvicorn main:app --reload', 'python -m http.server 8000', 'logging.basicConfig(level=logging.INFO)', 'retry = tenacity.retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))'],
-          keyConcepts: 'Python data structures performance, OOP for infrastructure code, proper logging setup with structured output, FastAPI for high-performance APIs, automation with subprocess and robust retry logic.',
+          keyConcepts: 'Python data structures performance, OOP for infrastructure code, proper logging setup with structured output, FastAPI for high-performance APIs, automation with subprocess and robust retry logic. PLUS: Basic ML awareness — what a model is, training vs inference (critical infra distinction), tensors as the universal ML data format, CNN vs Transformer conceptually (knowing the model type tells you the infra requirements). No math deep dive needed yet — just the vocabulary to talk to ML engineers and understand deployment requirements.',
           projectIdeas: 'LLM API Gateway: Build a FastAPI proxy with rate limiting (token bucket), retry with exponential backoff, request/response logging to file + stdout, caching layer (Redis), and a /health endpoint with model status.',
         },
         {
@@ -118,9 +124,13 @@
       days: [
         {
           day: 8, title: 'AWS Core Services — IAM & EC2',
-          topics: ['IAM', 'EC2', 'Security Groups', 'Key Pairs', 'AWS CLI'],
+          topics: ['Basic Cloud Thinking', 'IAM', 'EC2', 'Security Groups', 'Key Pairs', 'AWS CLI'],
           subtopicIds: [],
           reviewItems: [
+            'What is a server? A computer running 24/7 in a data center — you rent it (EC2), someone else manages the hardware (cloud), you still manage the OS and software',
+            'What is serverless? You write code, cloud provider runs it on demand — no server to manage, auto-scales to zero when idle, you pay per request not per hour (AWS Lambda, Cloud Run), cold start = delay when a function hasn\'t been used recently and needs a fresh container',
+            'What is latency? Time for a request to travel from source to destination and back (round-trip), includes network hops + processing time. In ML: model inference latency = time from input to output. Every millisecond matters for real-time applications',
+            'What is cold start? When a serverless function or container starts for the first time or after idle — requires loading code, dependencies, and (for ML) the model weights into memory. ML model cold starts can be 5-30 seconds vs 100ms for a warm container. This is why we keep models warm with keep-alive traffic',
             'IAM best practices: least privilege, roles, MFA, key rotation',
             'IAM policy JSON: Effect, Action, Resource, Condition',
             'EC2 instance types: t2.micro, t3.medium, g4dn.xlarge (GPU)',
@@ -128,7 +138,7 @@
             'AWS CLI: configure, profiles, IAM roles for EC2',
           ],
           keyCommands: ['aws iam list-users', 'aws ec2 describe-instances', 'aws ec2 run-instances --image-id ami-... --instance-type t2.micro', 'aws configure', 'aws sts assume-role'],
-          keyConcepts: 'IAM policies (JSON structure — memorize), roles for services (EC2, Lambda, ECS), EC2 launch wizard, security group rules (stateful), key pair authentication, instance profiles for granting permissions to EC2.',
+          keyConcepts: 'Basic cloud thinking — server vs serverless (tradeoffs: control vs convenience, predictable cost vs per-request, cold start vs always-on), latency sources (network, compute, I/O), cold start impact on ML serving (model loading is the bottleneck, solution: keep-warm strategies). Then IAM policies (JSON structure — memorize), roles for services (EC2, Lambda, ECS), EC2 launch wizard, security group rules (stateful), key pair authentication, instance profiles for granting permissions to EC2. Cloud concepts are the vocabulary for every infrastructure discussion — know them before touching AWS.',
           projectIdeas: 'EC2 + User Data Automation: Launch an EC2 instance with a user-data script that installs Docker, pulls your image from the previous week, and runs it. Configure the security group for HTTP/HTTPS only. Tag everything.',
         },
         {
@@ -146,34 +156,57 @@
           projectIdeas: 'Three-Tier AWS Architecture: VPC with public/private subnets across 2 AZs → ALB (public) → EC2 auto-scaling group (private) → RDS PostgreSQL (private). S3 for logs. CloudWatch dashboard.',
         },
         {
-          day: 10, title: 'Docker — Images & Containers',
-          topics: ['Dockerfile', 'Multi-stage Builds', 'Best Practices', 'Security'],
+          day: 10, title: 'Docker Mastery — Images, Containers, Storage & Networking',
+          topics: ['Docker Fundamentals', 'Dockerfile Deep Dive', 'Layer Caching & Multi-stage Builds', 'Volumes & Networking', 'Security & Debugging'],
           subtopicIds: [],
           reviewItems: [
-            'FROM, RUN, COPY, WORKDIR, EXPOSE, CMD, ENTRYPOINT — layer caching order',
-            'Multi-stage builds: builder pattern for smaller images',
-            'Health checks: HEALTHCHECK --interval=30s --timeout=3s CMD curl -f http://localhost:8000/health || exit 1',
-            'Non-root user: RUN addgroup -S appgroup && adduser -S appuser -G appgroup && USER appuser',
-            '.dockerignore, --no-cache, security scanning with trivy',
+            'Docker architecture: daemon, CLI, containerd, runc — OCI image/runtime standards, image vs container (blueprint vs instance)',
+            'Core commands: docker run (-d, -p, -v, -e, --name, --rm, --restart, --memory, --cpus, --gpus, --network, --read-only, --cap-drop), docker ps -a, docker stop/start/rm/rmi, docker system prune -af (clean dangling images/containers/volumes/build cache)',
+            'Dockerfile mastery: FROM (alpine, slim, distroless, scratch — size vs compatibility tradeoffs), RUN (chain with &&, avoid layers per command), COPY vs ADD (prefer COPY — ADD auto-extracts tar/zip and has URL fetch, unexpected behavior), WORKDIR (creates dirs and sets CMD/ENTRYPOINT context), EXPOSE (documentation only), CMD vs ENTRYPOINT (ENTRYPOINT sets executable, CMD provides defaults — combine for flexible containers), USER (addgroup/adduser then switch — non-root by default), HEALTHCHECK, SHELL, LABEL, ARG vs ENV (ARG build-time, ENV runtime — do not put secrets in ARG)',
+            'Layer caching & optimization: order FROM→WORKDIR→COPY package.json→RUN install deps→COPY . (cache install layer unless deps change), .dockerignore (exclude node_modules, .git, __pycache__, .env, build artifacts — speeds up build context), multi-stage builds (builder stage: full build tools + compile → runtime stage: minimal base + copy --from=builder only artifacts — Node 1.2GB→140MB, Python 900MB→180MB), buildx with BuildKit (docker buildx build --cache-from/--cache-to for CI caching, --platform linux/amd64,linux/arm64 for multi-arch)',
+            'Volumes: named volumes (docker volume create mydata, docker run -v mydata:/app/data — managed by Docker, persist across restarts, backup with docker run --rm -v mydata:/data -v $(pwd):/backup alpine tar czf /backup/mydata.tar.gz -C /data .), bind mounts (docker run -v /host/path:/container/path — for dev hot-reload, not for production), tmpfs (--tmpfs /app/cache — in-memory, no persistence, for sensitive temp data)',
+            'Networking: bridge (default — containers on same bridge communicate by IP, --link deprecated), custom bridge (docker network create mynet — containers resolve by name via embedded DNS, create network first then --network=mynet on run), host (--network host — container uses host stack, no port mapping, no isolation, Linux only), none (--network none — isolated, for batch jobs), port publishing (-p 8080:80 maps host:8080 to container:80, -p 127.0.0.1:8080:80 for localhost-only)',
+            'Debugging: docker logs -f --tail 100 container (stdout/stderr from container), docker exec -it container bash (interactive shell inside running container — install debugging tools like curl, ping, netcat for troubleshooting), docker inspect container (full JSON metadata — mounts, network config, env vars, restart count, health status), docker stats (live CPU/memory/network/IO per container), docker events (real-time daemon events: create, start, stop, kill, die, oom, health_status), docker diff container (changed files in container filesystem since start)',
+            'Security: non-root user (USER appuser — critical, root inside container = root on host if breakout, addgroup -S appgroup && adduser -S appuser -G appgroup && USER appuser), read-only rootfs (--read-only --tmpfs /tmp --tmpfs /var/run — prevents container writes to filesystem, mount tmpfs for writable dirs needed at runtime), drop capabilities (--cap-drop=ALL --cap-add=NET_BIND_SERVICE — default capabilities include many not needed, principle of least privilege), no secrets in build args (used in ARG persists in image history — use --secret=id=mysecret,src=secret.txt with BuildKit or docker secrets), image scanning (docker scout quickview, trivy image --severity=CRITICAL, grype), image signing (cosign sign --key $KEY, cosign verify)',
           ],
-          keyCommands: ['docker build -t myapp .', 'docker run -d -p 8080:80 myapp', 'docker exec -it container bash', 'docker logs -f container', 'docker scout quickview'],
-          keyConcepts: 'Dockerfile best practices: layer caching (order FROM→WORKDIR→COPY package.json→RUN npm install→COPY .), multi-stage builds for small images, security (non-root, read-only rootfs, no secrets in build args).',
-          projectIdeas: 'Production Docker Image for ML API: Multi-stage build, non-root user, health check, read-only rootfs, .dockerignore, vulnerability scanning with Docker Scout. Push to Docker Hub with signed images.',
+          keyCommands: [
+            'docker build -t myapp:1.0.0 --secret=id=gh_token,src=token.txt .',
+            'docker run -d -p 8080:80 --name myapp --restart=unless-stopped --memory=512m --cpus=0.5 --read-only --tmpfs /tmp --cap-drop=ALL --cap-add=NET_BIND_SERVICE -v app_data:/data myapp:1.0.0',
+            'docker exec -it myapp sh -c "apk add curl && curl localhost:80/health"',
+            "docker inspect myapp | Select-String -Pattern '(\"IPAddress\":|\"Health\":|\"RestartCount\":)'  # PowerShell",
+            'docker buildx build --platform linux/amd64,linux/arm64 -t myapp:latest --cache-from=type=gha --cache-to=type=gha --push .',
+            'trivy image --severity=CRITICAL,HIGH --ignore-unfixed myapp:1.0.0',
+            'docker scout compare myapp:1.0.0 --to myapp:1.0.0-beta',
+            'docker system df -v  # detailed disk usage per image/container/volume/build-cache',
+          ],
+          keyConcepts: 'Docker fundamentals deep dive — architecture (client → daemon → containerd → runc), OCI standards ensuring portability across runtimes (Podman, containerd, CRI-O), Dockerfile mastery with layer caching optimization and multi-stage builds (separate build and runtime stages dramatically reduce image size), volume types for data persistence (named volumes for databases, bind mounts for dev, tmpfs for secrets), container networking (bridge with DNS resolution, host, port publishing), production container debugging workflow (logs → exec → inspect → stats → events), container security hardening (non-root, read-only, drop capabilities, scan/sign images). These are the Docker skills tested in every DevOps/MLOps interview.',
+          projectIdeas: 'Production-Grade Docker ML API: Multi-stage build (python:3.11-slim build stage with gcc/compilers → distroless runtime stage), non-root user, HEALTHCHECK curl http://localhost:8000/health, read-only rootfs with tmpfs for /tmp, drop all capabilities except NET_BIND_SERVICE, .dockerignore (node_modules, .env, .git, __pycache__, .pytest_cache, .mypy_cache), pinned dependencies with pip freeze > requirements.txt with hashes, docker scout scanning in CI breaking on CRITICAL, cosign signing with keyless OIDC, multi-arch build (amd64 + arm64 for Graviton), push to ECR/GHCR with semver tags (1.0.0, 1.0, 1, latest — but never rely on latest in production).',
         },
         {
-          day: 11, title: 'Docker Compose & Orchestration',
-          topics: ['Docker Compose', 'Multi-container Apps', 'Volumes', 'Networks', 'Env Management'],
+          day: 11, title: 'Docker Compose, Production Patterns & MLOps',
+          topics: ['Docker Compose Deep Dive', 'Production Patterns', 'GPU-Enabled Containers', 'MLOps Docker Patterns', 'CI/CD Integration'],
           subtopicIds: [],
           reviewItems: [
-            'compose.yml: services, networks, volumes, depends_on with healthcheck',
-            'Environment: .env file, env_file, environment, secrets',
-            'Named volumes vs bind mounts — persistence patterns',
-            'Custom networks: bridge, overlay, service isolation',
-            'profiles, deploy (replicas, resources), restart policies',
+            'Compose file: version (v3.8+ is legacy — use latest Compose Specification, no version key needed in docker compose v2), services (each defines image/build, ports, volumes, networks, env files, depends_on with healthcheck condition, deploy, healthcheck, restart, mem_limit, mem_reservation, cpus, gpus, security_opt, cap_add/cap_drop, read_only, tmpfs, logging, secrets), networks (default per-project bridge with DNS resolution by service name, custom networks for service isolation — internal: true for backend-only network), volumes (named volumes defined at top level, external: true for pre-existing volumes, driver_opts for cloud volume drivers)',
+            'Dependencies & health: depends_on (condition: service_started — default, waits for container start; condition: service_healthy — waits for HEALTHCHECK to pass, requires healthcheck defined on dependency), healthcheck in Compose (test: curl -f http://localhost:8000/health || exit 1, interval: 30s, timeout: 10s, retries: 3, start_period: 40s — for slow-starting services like databases or model servers), healthcheck resolution (docker inspect shows health status: starting → healthy → unhealthy, depends_on waits for healthy, compose up --wait waits for all service health conditions)',
+            'Environment & secrets: .env file (key=value pairs, auto-loaded from same directory, always use for env-specific config), env_file (specify multiple .env files per service, ordered precedence), environment (inline key=value or array, highest precedence for debugging overrides), secrets (file-based secrets mounted at /run/secrets/<name>, preferred for sensitive data — avoids env var leakage, not committed to version control), profiles (services.profiles — selectively start: docker compose --profile=monitoring up, dev profile for dev tools, prod profile for core services, monitoring profile for observability stack)',
+            'GPU-enabled containers: --gpus (docker run --gpus all, --gpus "device=0,1" for specific GPUs), NVIDIA Container Toolkit (nvidia-ctk runtime — required for GPU passthrough, install nvidia-container-toolkit package, configure runtime with nvidia-ctk runtime configure --runtime=docker, restart daemon, set runtime: nvidia in compose file), CUDA base images (nvidia/cuda:12.4.1-runtime-ubuntu22.04 for inference, nvidia/cuda:12.4.1-devel-ubuntu22.04 for training with compilers, pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime for PyTorch-specific, tensorflow/tensorflow:2.15.0-gpu for TF), ulimits (memlock: -1 for GPU memory locking, stack: -1 for deep learning stack size), shm_size (--shm-size=16g for PyTorch DataLoader shared memory — insufficient shm causes DataLoader hangs), GPU resource reservation (deploy.resources.reservations.devices: - driver: nvidia, count: 1, capabilities: [gpu])',
+            'Production patterns: restart policies (no — default, never auto-restart; on-failure — restart only on non-zero exit, max retries: on-failure:5; always — restart regardless of exit code, Docker daemon restart also restarts; unless-stopped — same as always but not restarted if manually stopped — recommended for production), resource limits (--memory=512m hard limit OOM kills, --memory-reservation=256m soft scheduling hint, --cpus=1.5 fractional CPU allocation, --cpuset-cpus=0-3 pin to specific cores, --pids-limit=100 prevent fork bombs), logging drivers (json-file — default, local — more efficient, journald — systemd journal, fluentd — log aggregation, awslogs — CloudWatch, gelf — Graylog, syslog, splunk; docker compose logging: driver: "json-file", options: { max-size: "10m", max-file: "3" } for log rotation — CRITICAL to prevent disk fill), logging best practices (structured JSON logging from app — {service, level, message, request_id, duration_ms, trace_id}, stdout/stderr per process, never log to files inside container — they are lost on restart and not captured by docker logs)',
+            'MLOps Docker patterns: training containers (large base with CUDA devel + build tools, multi-stage for model artifact, mount data volumes — never bake big datasets into images, use S3/GCS mounting instead, pin CUDA + cuDNN + PyTorch/TF versions, add --build-arg for training config, upload model to registry on completion), inference containers (minimal runtime base with CUDA runtime, copy only model file + serving code + handler, multi-stage build for smallest size, HEALTHCHECK curl model HTTP endpoint, readiness for model loaded fully, liveness for serving healthy, start_period for model cold start time, resource limits based on model memory requirements — always check model needs before setting limits), CUDA version compatibility (NVIDIA driver must support container CUDA version — driver major.minor >= container CUDA requirement, check with nvidia-smi, driver version baked into host kernel, cannot change without reboot, use nvidia/cuda:12.4.1-runtime to match driver, nvidia-ctk info to validate compatibility)',
+            'CI/CD integration: GitHub Actions (docker/build-push-action — tags: type=sha, type=semver, type=ref, type=raw:latest; cache-from: type=gha, cache-to: type=gha — layer caching across CI runs, drastically speeds up builds; platforms: linux/amd64,linux/arm64 for multi-arch; secrets: inherit | secrets: GIT_AUTH_TOKEN for private repos; provenance: true for SLSA attestation; sbom: true for software bill of materials), image tagging strategy (never :latest in production — use git SHA for traceability: myapp:abc123def, semver: myapp:1.2.3, branch: myapp:main, commit+env: myapp:staging-abc123; multi-tag pushes: docker tag then docker push multiple times or --tag multiple times in buildx; OIDC auth for cloud registries — no static credentials, configure OIDC provider in AWS/Azure/GCP, use docker/login-action with OIDC), deploy patterns (SSH deploy: scp compose file + docker compose pull && docker compose up -d on EC2; ECS: aws-actions/amazon-ecs-deploy-task-definition; EKS: kubectl-helm-action with image tag; zero-downtime: rolling update with health checks, maxSurge=1 maxUnavailable=0, readiness probe before traffic routing)',
           ],
-          keyCommands: ['docker compose up -d', 'docker compose down -v', 'docker compose logs -f', 'docker compose ps', 'docker compose config'],
-          keyConcepts: 'Production Compose patterns: healthcheck-based depends_on, secrets for sensitive data, volume mounts for persistence, resource limits, profiles for dev/prod. The standard stack for local AI/ML development.',
-          projectIdeas: 'Full LLM Stack with Compose: FastAPI app + Qdrant (vector DB) + PostgreSQL + Redis (cache) + Nginx (reverse proxy). Health checks, secrets, resource limits, named volumes for persistence.',
+          keyCommands: [
+            'docker compose --profile=full-stack --profile=monitoring up -d --wait --wait-timeout=120',
+            'docker compose run --rm app pytest tests/ -v  # ephemeral test container',
+            'docker compose -f compose.yml -f compose.prod.yml config  # merge production overrides',
+            'docker run --gpus all --shm-size=16g --ulimit memlock=-1 --ulimit stack=-1 -v /mnt/data:/data nvidia/cuda:12.4.1-runtime-ubuntu22.04 nvidia-smi',
+            "docker compose exec app sh -c 'curl -X POST http://localhost:8000/predict -H \"Content-Type: application/json\" -d @test_input.json'",
+            'docker system prune -af --volumes  # clean everything, WARNING: destroys volumes too',
+            'docker compose logs --tail=50 --follow --no-log-prefix app db redis',
+            'docker compose down --remove-orphans --volumes  # clean teardown, --volumes removes named volumes',
+          ],
+          keyConcepts: 'Docker Compose deep dive for production multi-container stacks — service dependencies with healthcheck-based ordering (depends_on: condition: service_healthy), environment management with .env/environment/secrets (never hardcode), GPU container configuration (NVIDIA Container Toolkit, shm_size, ulimits for deep learning), production container patterns (restart: unless-stopped, resource limits with hard/soft thresholds, logging drivers with rotation to prevent disk fill), MLOps Docker patterns (separation of training vs inference containers, CUDA version compatibility management, model serving health checks with start_period for cold start), CI/CD integration (GitHub Actions with layer caching and multi-arch builds, OIDC auth, zero-downtime deploy). This is the Docker knowledge required for production MLOps — tested in every senior DevOps/MLOps interview at $150K+ roles.',
+          projectIdeas: 'MLOps Docker Stack with GPU Support: Docker Compose stack — FastAPI ML inference service (with NVIDIA GPU, CUDA 12.4 runtime, model loaded at startup with start_period healthcheck, resource limits based on model VRAM + 20% headroom, read-only rootfs with tmpfs for /tmp and /model-cache), PostgreSQL (named volume for persistence, healthcheck with pg_isready, mem_limit=1g for small DB), Redis cache (named volume, healthcheck with redis-cli ping, no persistence mode for cache), Nginx reverse proxy (rate limiting per endpoint, logging driver with rotation). Compose profiles: full-stack (all services), minimal (app + db only), monitoring (Prometheus + Grafana sidecar). GPU reservation in deploy.resources — count: 1, capabilities: [gpu]. CI/CD: GitHub Actions buildx with GHA cache, multi-arch, trivy scan, cosign sign, tag with SHA+semver, deploy to EC2/EKS with zero-downtime rolling update.',
         },
         {
           day: 12, title: 'CI/CD with GitHub Actions',
@@ -741,18 +774,20 @@
         },
         {
           day: 48, title: 'Model Serving',
-          topics: ['TorchServe', 'BentoML', 'ONNX', 'Optimization', 'Batching'],
+          topics: ['TorchServe', 'BentoML', 'ONNX & Graph Concept', 'Optimization', 'Batching'],
           subtopicIds: [],
           reviewItems: [
             'TorchServe: model archiver (torch-model-archiver: model-name, version, serialized-file .pt, handler handler.py, extra-files index_to_name.json), handler.py (preprocess: transform input to tensor, inference: model forward with autocast/batch dim handling, postprocess: convert tensor to output format, handle: orchestrate all three), configuration (config.properties: inference_address, management_address, metrics_address, number_of_gpu, batch_size, max_batch_delay, models config: default_version, min_workers, max_workers, batch_size), metrics API (ts/metrics for custom Prometheus metrics endpoint), K8s deployment with TorchServe InferenceService',
             'BentoML: bentofile.yaml (service: MyService, models: [], runners: [\"my_runner\"], apis, envs, python requirements), service definition (@bentoml.service decorator on class, @bentoml.api for endpoints), runners (distributed model execution — each runner manages GPU resources independently, batch_size, max_batch_size, max_latency_ms), Bento (distribution format: directory with model artifacts, environment, dockerfile), bentoml containerize (builds OCI image), Yatai for deployment management',
-            'ONNX: export (torch.onnx.export — model, dummy_input, input_names, output_names, dynamic_axes for variable batch size, opset_version=17+ for latest optimizations), ONNX Runtime sessions (ort.InferenceSession with providers=[\"CUDAExecutionProvider\", \"CPUExecutionProvider\"], session_options: graph_optimization_level, intra_op_num_threads, inter_op_num_threads), optimization (graph optimization: constant folding, node fusion, redundant node elimination; quantization: FP16, INT8 static/dynamic, QAT for INT8 accuracy recovery; tensorrt: TensorrtExecutionProvider for further kernel fusion and INT8 calibration)',
+            'Graph Concept: A neural network = a directed graph of operations — nodes are layers (Conv, ReLU, Pool, Dense, Add, Softmax), edges are tensor data flowing between nodes. Input → Conv → ReLU → Pool → Flatten → Dense → Softmax → Output. The graph structure determines the compute pattern: CNNs are feed-forward DAGs with local connections, Transformers have more complex graphs with residual connections, attention heads, layer norms. Every ML framework builds a computation graph — PyTorch defines it dynamically (eager mode), TensorFlow 1.x used static graphs, ONNX captures the graph as a portable format (serialized protobuf). Understanding your model as a graph helps you: (1) identify where to parallelize, (2) find bottlenecks for optimization, (3) partition for distributed inference, (4) reason about memory flow',
+            'ONNX (Open Neural Network Exchange): export from PyTorch (torch.onnx.export(model, dummy_input, "model.onnx", input_names=["input"], output_names=["output"], dynamic_axes={"input": {0: "batch_size"}, "output": {0: "batch_size"}}, opset_version=18 for FlashAttention support) — the dummy_input must match the model\'s expected input shape and dtype, dynamic_axes allows variable batch size at runtime without re-exporting, opset_version determines which operators are available (newer = more ops but need newer runtime), visualize the graph with netron.app (upload .onnx file, inspect nodes/edges/shapes/dtypes, find patterns like Conv → BatchNorm → ReLU fusion opportunities), ONNX Runtime (ort.InferenceSession with providers, session_options: graph_optimization_level=ENABLE_ALL for maximum fusion, intra_op_num_threads=4 for CPU inference, custom operators via ort.register_custom_ops_library for unsupported ops), optimization (graph optimization: constant folding folds constant subgraphs into single nodes, node fusion merges Conv+BatchNorm+ReLU into one kernel, redundant node elimination removes identity/transpose/Cast ops — ORT does these automatically at ENABLE_ALL level; quantization: FP16 inference via CUDAExecutionProvider with half-precision, INT8 via tensorrt provider with calibration for accuracy recovery; TensorRT: TensorrtExecutionProvider for NVIDIA GPUs — fuses entire subgraphs into single TensorRT engines, optimizes kernel launch parameters, INT8 calibration with calibration cache)',
+            'ML Inference Pipeline: load model (torch.jit.load or ort.InferenceSession() — preferably ONNX for portability and optimization, load once at startup not per-request, store in a singleton or lazy-loaded global), run inference (model(input_tensor) in PyTorch or session.run(None, {input_name: input_array}) in ONNX Runtime — always use with torch.no_grad() for PyTorch inference to disable gradient tracking and save memory, wrap in try/except for shape mismatches and OOM), measure latency (time.perf_counter() around inference call — run warmup iterations first (3-5) to trigger kernel compilation/JIT before measuring, report P50/P99 over 100+ requests, separate preprocess/inference/postprocess timing, track input shape (batch_size, sequence_length) alongside latency since larger inputs take longer), monitor GPU memory (torch.cuda.memory_allocated(), nvidia-smi, pynvml for programmatic access — model OOM is the most common production failure, set memory limits and monitor utilization, watch for memory leaks from un-freed tensors)',
             'Optimization: FP16/INT8 quantization (Post-Training Quantization PTQ: calibrate on small dataset, Quantization-Aware Training QAT: simulate quantization during training for accuracy recovery — better for INT8), kernel fusion (FasterTransformer/TensorRT-LLM: fused self-attention, fused FFN, in-place operations, removed memory bound ops), torch.compile (Triton-based compiler: mode=max-autotune for maximum performance, can give 2x speedup on CUDA), KV cache optimization (shared prefix caching for common contexts — vLLM, prefix caching in TGI)',
             'Batching: dynamic batching (server collects requests up to max_batch_size or max_batch_delay then processes batch — standard, padding required for variable-length inputs), continuous batching (vLLM innovation: iteration-level scheduling, KV cache paging, add/remove sequences per decode iteration, no padding, near-100% GPU utilization, 10-20x throughput over naive batching), max_batch_size and max_latency_ms tradeoff (larger batches = higher throughput but higher per-request latency), priority queuing (high-priority requests jump queue)',
           ],
           keyCommands: ['torch-model-archiver --model-name mymodel --version 1.0 --serialized-file model.pt --handler handler.py --extra-files index_to_name.json --export-path model_store', 'torchserve --start --model-store model_store --models mymodel.mar --ncs', 'bentoml serve service.py:MyService --reload', 'torch.onnx.export(model, dummy, \"model.onnx\", dynamic_axes={\"input\": {0: \"batch_size\"}, \"output\": {0: \"batch_size\"}}, opset_version=18)', "ort_session = ort.InferenceSession('model.onnx', providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])"],
-          keyConcepts: 'Model serving frameworks — TorchServe with custom handlers (preprocess, inference, postprocess, metrics API), BentoML with runners and bentofile.yaml (distributed model execution), ONNX export and ONNX Runtime optimization (graph optimization, FP16/INT8 quantization, TensorRT), model optimization (torch.compile, kernel fusion, KV cache optimization), batching strategies (dynamic batching vs continuous batching for throughput). Model serving bridges ML and production infrastructure.',
-          projectIdeas: 'Model Serving Benchmark: Export a trained model to TorchServe (custom handler with FP16) and BentoML format, export to ONNX with FP16 quantization, benchmark all three on GPU (batch sizes 1, 8, 32, 64; measure P50/P99 latency, throughput req/s, GPU utilization), test dynamic batching (batch_size=32, max_batch_delay=100ms), deploy most performant variant on K8s with HPA based on gpu_utilization, document latency/throughput/cost tradeoffs in README.',
+          keyConcepts: 'Model serving frameworks — TorchServe with custom handlers (preprocess, inference, postprocess, metrics API), BentoML with runners and bentofile.yaml (distributed model execution), Graph Concept (neural network as directed graph of operations — nodes = layers, edges = tensor flow, understanding the graph enables optimization and partitioning), ONNX as portable graph format with graph visualization (netron.app), ONNX Runtime optimization (graph-level fusion, FP16/INT8 quantization, TensorRT), ML inference pipeline (load once, warmup, measure latency with P50/P99, monitor GPU memory), model optimization (torch.compile, kernel fusion, KV cache optimization), batching strategies (dynamic batching vs continuous batching for throughput). Model serving bridges ML and production infrastructure — knowing the graph concept and ONNX pipeline is what separates infra engineers from model researchers.',
+          projectIdeas: 'Model Serving Benchmark: Export a trained model to TorchServe (custom handler with FP16) and BentoML format, export to ONNX with FP16 quantization, visualize the ONNX graph with netron.app (identify Conv+BN+ReLU fusion opportunities), benchmark all three on GPU (batch sizes 1, 8, 32, 64; measure P50/P99 latency, throughput req/s, GPU utilization), test dynamic batching (batch_size=32, max_batch_delay=100ms), deploy most performant variant on K8s with HPA based on gpu_utilization, document latency/throughput/cost tradeoffs with graph architecture diagram in README.',
         },
         {
           day: 49, title: 'Feature Engineering',
@@ -1484,48 +1519,213 @@ export const majorProjects = [
 ];
 
 export const industryInsights = {
-  demandGap: {
-    title: '3:1 Demand Gap',
-    description: 'For every qualified MLOps engineer, there are 3 open roles. The market has more jobs than qualified candidates — and the gap is growing.',
-    source: 'LLMHire Market Analysis, 2026',
+  // THE BIG PICTURE: Bifurcation
+  marketOverview: {
+    oneLine: 'Two markets running in opposite directions: general tech contracting, AI infrastructure booming.',
+    meta: [
+      { label: 'US tech workforce', value: '9.6M', detail: 'Growing 1.9% in 2026, 185K net new jobs (CompTIA)' },
+      { label: 'Tech unemployment', value: '3.9%', detail: 'March 2026, briefly crossed above national average (CompTIA)' },
+      { label: 'Active tech openings', value: '537K+', detail: 'March 2026, third consecutive monthly gain (CompTIA)' },
+    ],
+    bifurcation: {
+      headline: 'The Bifurcation That Defines 2026',
+      description: [
+        'The "tech job market" is not one market — it\'s two completely different markets running in opposite directions.',
+        'General software engineering postings are down 49% from pre-pandemic baselines, while ML engineer openings are up 59%.',
+        'Recruiters searching for AI/ML talent report sky-high reply rates; those searching for full-stack or front-end report the opposite.',
+        'If you hear "tech hiring is dead" or "tech hiring is booming" — both are true, just in different segments.',
+      ],
+      dataPoints: [
+        { label: 'ML/AI Engineer postings vs 2020', value: '+59%', color: 'emerald' },
+        { label: 'All tech postings vs 2020', value: '-36%', color: 'amber' },
+        { label: 'General SWE postings vs 2020', value: '-49%', color: 'red' },
+        { label: 'AI-required postings growth (2024-2026)', value: '+109%', color: 'emerald' },
+      ],
+      source: 'Indeed Hiring Lab, CompTIA, Stanford HAI 2026',
+    },
   },
+
+  // TALENT WAR
+  demandGap: {
+    title: '1.6M Open Roles, 518K Qualified Candidates',
+    description: 'The AI talent gap is the defining constraint on every tech company\'s growth strategy in 2026. ManpowerGroup\'s global survey of 39K+ employers found AI skills are the hardest to hire for in the world — harder than engineering, harder than IT, harder than skilled trades.',
+    source: 'ManpowerGroup Global Talent Shortage Survey, JobsByCulture Analysis 2026',
+    globalData: [
+      { label: 'Open AI positions globally', value: '1.6M' },
+      { label: 'Qualified candidates available', value: '518K' },
+      { label: 'Effective demand gap ratio', value: '3:1' },
+      { label: 'AI hiring YoY growth', value: '+88%' },
+    ],
+    entryLevelNote: 'Only 2.5% of AI positions target engineers with 0-2 years of experience. Entry-level hiring dropped 73%. The ladder is being pulled up — junior roles are vanishing while senior roles explode.',
+  },
+
+  // LAYOFFS (what's actually happening)
+  layoffReality: {
+    headline: 'Layoffs Are Real — But They\'re Not Hitting Everyone',
+    description: 'TrueUp logged 150K+ people impacted by 368 tech layoffs in 2026 so far (962/day, faster than 2025\'s 674/day). But cuts are concentrated in mid-career GENERALIST roles at large employers. AI-specialist engineers are largely spared: when they\'re laid off, they\'re typically hired within days, not weeks.',
+    keyInsight: 'AI was cited as the reason for only ~5% of layoffs in 2025 (Challenger, Gray & Christmas). In most cases, "AI layoffs" is a convenient justification for cuts a company already wanted to make — not AI replacing engineers.',
+    data: [
+      { label: '2026 layoff events so far', value: '368' },
+      { label: 'People impacted', value: '150,096', detail: '962/day (faster than 2025)' },
+      { label: '2025 total layoff events', value: '783', detail: '245,953 impacted (674/day)' },
+    ],
+    source: 'TrueUp Layoffs Tracker, June 2026',
+  },
+
+  // SALARY TIERS (the 4-tier chasm)
+  salaryTiers: {
+    headline: 'Salary Isn\'t a Spectrum — It\'s a Four-Tier Chasm',
+    description: [
+      'The AI compensation landscape in 2026 is not incremental. There are four distinct tiers, and the gap between Tier 1 and Tier 3 is 3-5x for what is often the same job title.',
+      'A "Senior ML Engineer" at a frontier lab earns $600K+. The same title at an enterprise company pays $220K. Same title, completely different universe.',
+    ],
+    tiers: [
+      { tier: 'Frontier Labs', comp: '$600K – $1M+', companies: 'OpenAI, Anthropic, DeepMind, Meta FAIR, xAI', requirement: 'PhD + frontier research, model training at scale' },
+      { tier: 'Top-Tier AI Companies', comp: '$350K – $600K', companies: 'Databricks, Scale AI, Cursor, Cohere', requirement: 'Production ML, inference, AI infrastructure' },
+      { tier: 'Enterprise AI / ML', comp: '$170K – $300K', companies: 'Banks, healthcare, retail, SaaS with AI', requirement: 'Applied ML, fine-tuning, RAG, integrations' },
+      { tier: 'AI-Adjacent', comp: '$130K – $200K', companies: 'Traditional tech adding AI features', requirement: 'Prompt engineering, AI ops, data pipelines' },
+    ],
+    aiPremium: [
+      { level: 'Entry-level', premium: '+6.2%' },
+      { level: 'Mid-level', premium: '+11.9%' },
+      { level: 'Senior', premium: '+14.2%' },
+      { level: 'Staff', premium: '+18.7%' },
+    ],
+    premiumNote: 'Source: Levels.fyi Q3 2025. AI engineers at staff level earn 18.7% more than non-AI peers, up from 15.8% the prior year. Premium is widening, not converging.',
+    roberHalfComparison: [
+      { role: 'Software Engineer (general)', range: '$109K – $175K', midpoint: '-' },
+      { role: 'AI/ML Engineer', range: '$134K – $193K', midpoint: '$170,750' },
+      { role: 'AI-Focused SWE (Levels.fyi avg)', range: '-', midpoint: '$245,000' },
+    ],
+  },
+
+  // ROLE-SPECIFIC SALARIES
   salaryRanges: [
-    { role: 'Junior MLOps Engineer', range: '$90K-$130K', demand: 'High' },
-    { role: 'Mid-Level MLOps Engineer', range: '$130K-$175K', demand: 'Very High' },
-    { role: 'Senior MLOps Engineer', range: '$185K-$220K', demand: 'Critical' },
-    { role: 'AI Infrastructure Engineer', range: '$150K-$220K', demand: 'Very High' },
-    { role: 'ML Platform Engineer', range: '$130K-$195K', demand: 'High' },
-    { role: 'Cloud DevOps (AI Focus)', range: '$120K-$180K', demand: 'High' },
+    { role: 'Junior DevOps / MLOps Engineer', range: '$85K – $120K', demand: 'Moderate' },
+    { role: 'Mid-Level DevOps Engineer', range: '$120K – $160K', demand: 'High' },
+    { role: 'Senior DevOps Engineer', range: '$155K – $200K', demand: 'Very High' },
+    { role: 'DevSecOps Engineer', range: '$130K – $190K', demand: 'Very High' },
+    { role: 'Site Reliability Engineer (SRE)', range: '$140K – $210K', demand: 'Critical' },
+    { role: 'Platform Engineer', range: '$130K – $195K', demand: 'High' },
+    { role: 'MLOps Engineer (Mid)', range: '$130K – $175K', demand: 'Critical' },
+    { role: 'Senior MLOps Engineer', range: '$180K – $250K', demand: 'Critical' },
+    { role: 'AI Infrastructure Engineer', range: '$150K – $250K', demand: 'Very High' },
+    { role: 'LLM Infrastructure Engineer', range: '$160K – $300K', demand: 'Critical' },
+    { role: 'ML Platform Engineer', range: '$130K – $195K', demand: 'Very High' },
+    { role: 'Cloud Engineer (AI Focus)', range: '$115K – $175K', demand: 'High' },
   ],
+
+  // SKILLS
   topSkills: [
     { skill: 'Kubernetes & GPU Orchestration', weight: 95, description: 'Pods, deployments, HPA, GPU scheduling, Karpenter' },
     { skill: 'LLM Serving (vLLM, TensorRT-LLM)', weight: 92, description: 'Model serving, quantization, continuous batching, P99 latency optimization' },
     { skill: 'CI/CD for ML Pipelines', weight: 90, description: 'GitHub Actions, ArgoCD, model validation gates, automated retraining' },
-    { skill: 'Infrastructure as Code (Terraform)', weight: 88, description: 'AWS/GCP/Azure resource provisioning, reproducible environments' },
-    { skill: 'MLflow / Kubeflow', weight: 85, description: 'Experiment tracking, model registry, pipeline orchestration' },
-    { skill: 'Vector Databases (Qdrant, Pinecone)', weight: 82, description: 'RAG systems, semantic search, HNSW indexing, hybrid search' },
-    { skill: 'RAG Architecture', weight: 80, description: 'Chunking, embedding, retrieval, context injection, generation' },
-    { skill: 'Observability (Prometheus, Grafana)', weight: 78, description: 'Metrics, dashboards, alerting, drift detection' },
-    { skill: 'Python + FastAPI', weight: 75, description: 'High-performance APIs, async, Pydantic, middleware' },
-    { skill: 'Cloud (AWS SageMaker / GCP Vertex AI)', weight: 73, description: 'Managed ML platforms, MLOps services, cost optimization' },
-    { skill: 'Model Monitoring & Drift Detection', weight: 70, description: 'Data drift, concept drift, model decay, Evidently AI' },
-    { skill: 'AI Security (Prompt Injection, Guardrails)', weight: 65, description: 'Input sanitization, output validation, PII redaction, rate limiting' },
+    { skill: 'Infrastructure as Code (Terraform)', weight: 88, description: 'AWS/GCP/Azure provisioning, reproducible environments, state management' },
+    { skill: 'MLflow / Kubeflow / Weights & Biases', weight: 85, description: 'Experiment tracking, model registry, pipeline orchestration' },
+    { skill: 'RAG & Vector Databases (Pinecone, Qdrant)', weight: 83, description: 'Chunking strategies, embedding, retrieval, hybrid search, context injection' },
+    { skill: 'Python + FastAPI + Async', weight: 80, description: 'High-performance APIs, Pydantic validation, async middleware' },
+    { skill: 'Observability (Prometheus, Grafana, OpenTelemetry)', weight: 78, description: 'Metrics, dashboards, alerting, distributed tracing, drift detection' },
+    { skill: 'AI Agent Infrastructure', weight: 76, description: 'Agent orchestration, tool execution, MCP servers, guardrails' },
+    { skill: 'Model Monitoring & Drift Detection', weight: 74, description: 'Data drift, concept drift, model decay, Evidently AI, Whylogs' },
+    { skill: 'AI Security (Prompt Injection, Guardrails)', weight: 70, description: 'Input sanitization, output validation, PII redaction, rate limiting' },
+    { skill: 'Linux Deep Dive + Networking', weight: 68, description: 'Process management, perf analysis, tcpdump, iptables, systemd' },
   ],
+  skillsDying: [
+    'Manual pipeline management — AIOps and automation are replacing it fast',
+    'Tool-specific expertise alone (e.g., "Jenkins expert" with no cloud-native skills)',
+    'Siloed "ops team" model — cross-functional ownership is the new standard',
+    'Security as an afterthought — DevSecOps means security in every stage',
+  ],
+
+  // INTERVIEW PROCESS
+  interviewProcess: {
+    headline: 'How DevOps & MLOps Interviews Actually Work in 2026',
+    keyAdvice: 'Leetcode-style whiteboard algorithms are RARE in DevOps/MLOps interviews. The focus is on system design, real production experience, and debugging ability.',
+    rounds: [
+      {
+        round: 'Round 1: Technical Screen (30-45 min)',
+        content: 'Linux commands, basic cloud concepts, CI/CD fundamentals, describe a deployment you\'ve worked on. Behavioral questions about past incidents. "Walk me through a production incident you handled" is the single most common question.',
+        type: 'phone/video',
+      },
+      {
+        round: 'Round 2: Technical Deep Dive (60 min)',
+        content: 'Walk through a project you built. They will probe to verify you actually built it: "Why DynamoDB over RDS?" "How does your Terraform state locking work?" "What happens if the Lambda times out?" This round separates tutorial-watchers from builders.',
+        type: 'live coding + whiteboarding',
+      },
+      {
+        round: 'Round 3: System Design (60 min)',
+        content: 'Design a deployment pipeline for microservices. Design a blue/green strategy. Design an ML serving system. Design a monitoring system for 200 services. Trade-off reasoning matters more than the "correct" answer.',
+        type: 'whiteboarding',
+      },
+      {
+        round: 'Round 4: Behavioral / Cross-functional (45 min)',
+        content: 'How do you handle on-call? How do you prioritize reliability vs. features? How do you communicate incidents to non-technical stakeholders? Cultural fit, collaboration, and incident command skills.',
+        type: 'conversation',
+      },
+    ],
+    mlopsSpecific: [
+      'ML System Design: Feature store, training pipeline, serving infrastructure, monitoring',
+      'Model Lifecycle: Experiment tracking, versioning, A/B testing, gradual rollouts',
+      'Drift Detection: Data drift vs concept drift, monitoring strategies, automated retraining triggers',
+      'LLMOps: vLLM configuration, RAG pipeline design, prompt management, cost optimization per token',
+    ],
+    projectPortfolio: [
+      { project: 'Serverless API with full IaC', stack: 'Terraform + Lambda + API Gateway + DynamoDB', demonstrates: 'No console clicks, everything in code, CI/CD deployment' },
+      { project: 'Complete CI/CD pipeline with OIDC', stack: 'GitHub Actions + Docker + ECR + Terraform', demonstrates: 'OIDC auth (no stored secrets), approval gates, staging/prod' },
+      { project: 'ML training + serving pipeline', stack: 'MLflow + K8s + FastAPI + Prometheus', demonstrates: 'End-to-end ML lifecycle, monitoring, drift detection' },
+      { project: 'RAG system with guardrails', stack: 'vLLM + Qdrant + FastAPI + Guardrails AI', demonstrates: 'Retrieval, context injection, safety, P99 latency optimization' },
+    ],
+  },
+
+  // REMOTE WORK
+  remoteWork: {
+    headline: 'Remote in Tech — 74% On-Site, But 8% Gets 10x Volume',
+    description: '74% of US tech ads are on-site, 18% hybrid, only 8% fully remote (Robert Half 2026). But tech still has the highest remote share of any industry. Remote roles get 6-10x more applicants. Geographic talent depth matters again for on-site roles.',
+  },
+
+  // GROWTH MARKETS
   growthMarkets: [
-    { market: 'Technology (AI-Native Companies)', growth: '40% YoY', roles: 'MLOps, AI Infrastructure, ML Platform' },
-    { market: 'Financial Services', growth: '35% YoY', roles: 'MLOps, AI Security, Cloud Infrastructure' },
-    { market: 'Healthcare', growth: '30% YoY', roles: 'AI Infrastructure, MLOps, Security' },
+    { market: 'Technology (AI-Native Companies)', growth: '+188% vs natl avg', roles: 'MLOps, AI Infrastructure, ML Platform' },
+    { market: 'Financial Services', growth: '35% YoY', roles: 'MLOps, AI Security, Cloud Infra' },
+    { market: 'Healthcare / Biotech', growth: '30% YoY', roles: 'AI Infrastructure, MLOps, Security' },
     { market: 'Defense & Government', growth: '25% YoY', roles: 'MLOps with Clearance, AI Security' },
-    { market: 'Autonomous Systems', growth: '35% YoY', roles: 'MLOps, Edge AI Infrastructure' },
+    { market: 'Autonomous Systems / Robotics', growth: '35% YoY', roles: 'MLOps, Edge AI, Real-time Inferencing' },
   ],
+  fastestGrowingOccupations: [
+    { role: 'Data Scientists / Analysts', growth: '420% above national avg' },
+    { role: 'Cybersecurity Analysts / Engineers', growth: '346% above national avg' },
+    { role: 'Software Developers / Engineers (AI)', growth: '188% above national avg' },
+    { role: 'IT Directors / CIOs', growth: '175% above national avg' },
+    { role: 'Software QA / Testers (AI)', growth: '110% above national avg' },
+  ],
+
+  // FUTURE TRENDS
   futureTrends: [
-    'LLM deployment at scale (vLLM, TensorRT-LLM, continuous batching)',
-    'AI agent infrastructure (agent orchestration, tool execution, monitoring)',
-    'Edge MLOps (IoT, mobile, embedded model deployment)',
-    'Green ML (sustainable AI infrastructure, carbon-aware scheduling)',
-    'Federated learning infrastructure (distributed training across organizations)',
-    'AI security and governance (prompt injection, model poisoning, compliance)',
+    'LLM deployment at scale (vLLM, TensorRT-LLM, continuous batching, speculative decoding)',
+    'AI agent infrastructure (agent orchestration, tool execution, MCP servers, monitoring)',
+    'LLMOps specialization (prompt management, eval frameworks, cost per token optimization)',
+    'Edge MLOps (IoT, mobile, embedded model deployment, on-device inference)',
+    'AI security and governance (guardrails, red teaming, SBOM for ML, compliance automation)',
+    'Federated learning infrastructure (distributed training across orgs, differential privacy)',
+    'Green ML (sustainable AI infrastructure, carbon-aware scheduling, efficient models)',
   ],
+
+  // CERTIFICATIONS
+  certifications: [
+    { provider: 'AWS', cert: 'AWS Certified ML – Specialty or AWS Solutions Architect Associate', value: 'Good signal for cloud fundamentals' },
+    { provider: 'Kubernetes', cert: 'CKA (Certified Kubernetes Administrator)', value: 'Highly valued — shows hands-on K8s' },
+    { provider: 'Cloud', cert: 'Google Professional ML Engineer or Azure AI Engineer', value: 'Valuable for specific platform roles' },
+    { provider: 'Terraform', cert: 'HashiCorp Terraform Associate', value: 'Useful but project experience > cert' },
+  ],
+  certAdvice: 'Practical project experience outweighs certifications at most top employers. Build the projects, then consider certs for resume filtering at larger companies.',
+
+  // CAREER STRATEGY
+  careerStrategy: {
+    headline: 'Your Playbook for 2026',
+    forNewcomers: 'The window is narrowing at entry level. Differentiate with public projects that demonstrate production deployment (not Jupyter notebooks). Contribute to open-source AI frameworks. Target mid-tier AI companies or AI-adjacent enterprise roles where the competition is less extreme.',
+    forSeniors: 'Your leverage has never been higher. The 56% AI wage premium is an average — with 3+ years of production AI/MLOps experience, the premium can exceed 100%. Negotiate aggressively. Consider moving to a higher-paying tier.',
+    forNonAIDevs: 'Many "AI" roles at enterprise companies don\'t require deep ML expertise. They need engineers who can integrate APIs, build reliable data pipelines, and ship production features. 6 months of focused AI skill-building can qualify you for roles paying 30-50% more.',
+  },
 };
 
 export const dailyReviewEssentials = {

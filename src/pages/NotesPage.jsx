@@ -111,10 +111,10 @@ export default function NotesPage() {
   return (
     <div className="space-y-6">
       <FadeIn>
-        <div className="bg-gradient-to-r from-amber-600 to-orange-600 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
+        <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
           <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-medium mb-2">Learning</span>
           <h1 className="text-2xl sm:text-3xl font-bold">Notes & Code Snippets</h1>
-          <p className="text-amber-100 mt-1 text-sm">
+          <p className="text-indigo-100 mt-1 text-sm">
             Save notes, key concepts, and code snippets as you learn. Short reusable code for quick reference.
           </p>
         </div>
@@ -128,7 +128,7 @@ export default function NotesPage() {
             <select
               value={selectedSubtopic}
               onChange={(e) => setSelectedSubtopic(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-dark-600 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 outline-none dark:bg-dark-800 dark:text-gray-200"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-dark-600 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-dark-800 dark:text-gray-200"
             >
               <option value="">Select a subtopic...</option>
               {allSubtopics.map((s) => (
@@ -140,7 +140,7 @@ export default function NotesPage() {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder={isCodeSnippet ? 'Paste your code snippet here...' : 'Write your notes here...'}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-dark-600 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 outline-none min-h-[120px] font-mono dark:bg-dark-800 dark:text-gray-200"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-dark-600 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none min-h-[120px] font-mono dark:bg-dark-800 dark:text-gray-200"
             />
 
             <div className="flex items-center gap-3">
@@ -149,7 +149,7 @@ export default function NotesPage() {
                   type="checkbox"
                   checked={isCodeSnippet}
                   onChange={(e) => setIsCodeSnippet(e.target.checked)}
-                  className="rounded border-gray-300 dark:border-dark-600 text-amber-600 focus:ring-amber-500 accent-amber-600"
+                  className="rounded border-gray-300 dark:border-dark-600 text-indigo-600 focus:ring-indigo-500 accent-indigo-600"
                 />
                 This is a code snippet
               </label>
@@ -163,7 +163,7 @@ export default function NotesPage() {
               <button
                 onClick={handleSave}
                 disabled={!content.trim() || !selectedSubtopic}
-                className="px-4 py-1.5 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition disabled:opacity-50"
+                className="px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition disabled:opacity-50"
               >
                 {editingId ? 'Update' : 'Save'}
               </button>
@@ -218,9 +218,9 @@ export default function NotesPage() {
             <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">📝 Notes ({textNotes.length})</h2>
             <div className="space-y-3">
               {textNotes.map((note) => (
-                <div key={note.id} className="border border-gray-200 dark:border-dark-700 rounded-lg p-4 hover:border-amber-200 dark:hover:border-amber-600 transition">
+                <div key={note.id} className="border border-gray-200 dark:border-dark-700 rounded-lg p-4 hover:border-indigo-200 dark:hover:border-indigo-600 transition">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                    <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400">
                       {note.subtopic?.title || `Subtopic #${note.subtopic_id}`}
                     </span>
                     <div className="flex gap-2">
@@ -234,7 +234,7 @@ export default function NotesPage() {
                       </button>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-700 dark:text-gray-200 whitespace-pre-wrap">{note.content}</p>
+                  <pre className="text-sm text-gray-100 dark:text-gray-200 font-mono leading-relaxed whitespace-pre-wrap bg-gray-900 dark:bg-black rounded-lg p-3 overflow-x-auto border border-gray-700/50">{note.content}</pre>
                   <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-2">
                     {new Date(note.created_at).toLocaleDateString()}
                   </p>

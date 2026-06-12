@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import Sidebar from './Sidebar';
+import MotivationToast from '../Motivation/MotivationToast';
 
 const pageTitles = {
   '/': 'Dashboard',
@@ -140,6 +141,7 @@ export default function PageLayout({ children }) {
           {children}
         </main>
       </div>
+      <MotivationToast />
     </div>
   );
 }

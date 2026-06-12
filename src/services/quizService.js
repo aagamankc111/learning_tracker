@@ -30,6 +30,23 @@ export async function recordQuizAttempt(userId, quizType, score, totalQuestions)
     });
 
   if (error) throw error;
+
+  const { data: stats } = await supabase
+    .from('user_stats')
+    .select('total_xp, total_quizzes_taken')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  const quizXp = Math.round((score / totalQuestions) * 20);
+  const { error: upsertError } = await supabase
+    .from('user_stats')
+    .upsert({
+      user_id: userId,
+      total_quizzes_taken: (stats?.total_quizzes_taken || 0) + 1,
+      total_xp: (stats?.total_xp || 0) + quizXp,
+    }, { onConflict: 'user_id' });
+
+  if (upsertError) throw upsertError;
 }
 
 export async function fetchQuizHistory(userId) {
@@ -92,18 +109,18 @@ const CATEGORY_LABELS = {
 };
 
 const CATEGORY_COLORS = {
-  conceptual: 'bg-blue-100 text-blue-700',
-  scenario: 'bg-amber-100 text-amber-700',
-  interview: 'bg-violet-100 text-violet-700',
-  certification: 'bg-emerald-100 text-emerald-700',
-  'system-design': 'bg-rose-100 text-rose-700',
-  behavioral: 'bg-cyan-100 text-cyan-700',
+  conceptual: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+  scenario: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+  interview: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+  certification: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+  'system-design': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+  behavioral: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
 };
 
 const DIFFICULTY_COLORS = {
-  easy: 'bg-green-100 text-green-700',
-  medium: 'bg-yellow-100 text-yellow-700',
-  hard: 'bg-red-100 text-red-700',
+  easy: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+  medium: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+  hard: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
 };
 
 export { CATEGORY_LABELS, CATEGORY_COLORS, DIFFICULTY_COLORS, QUIZ_BANK, getQuestionsForInterview };

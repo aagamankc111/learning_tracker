@@ -3,13 +3,28 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useProgress } from '../hooks/useProgress';
 import { useDailyMotivation } from '../hooks/useDailyMotivation';
+import { useGamification } from '../hooks/useGamification';
 import curriculum from '../data/curriculum';
+import { todayStr } from '../utils/helpers';
 
-function StreakBadge({ days }) {
+function StreakBadge({ days, isActiveToday }) {
+  const green = 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400';
+  const red = 'border-red-500/30 bg-red-500/10 text-red-400';
+  const neutral = 'border-white/[0.06] bg-surface-card text-gray-500';
+
+  if (days === 0) {
+    return (
+      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${neutral}`}>
+        <span className="text-sm">🔥</span>
+        <span className="text-xs font-medium">Start today!</span>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20">
+    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${isActiveToday ? green : red}`}>
       <span className="text-sm">🔥</span>
-      <span className="text-xs font-medium text-accent">{days} day streak</span>
+      <span className="text-xs font-medium">{days} day streak</span>
     </div>
   );
 }
@@ -28,6 +43,8 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { progressMap, getOverallProgress, loading } = useProgress(user?.id);
   const { todaysQuote, aagamanMessage, streakMessage } = useDailyMotivation();
+  const { stats } = useGamification();
+  const today = todayStr();
 
   const allSubtopics = useMemo(() => {
     const items = [];
@@ -67,7 +84,7 @@ export default function Dashboard() {
           <h2 className="text-lg font-semibold text-gray-100">Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''}</h2>
           <p className="text-xs text-gray-500 mt-0.5">Here's your learning overview</p>
         </div>
-        <StreakBadge days={7} />
+        <StreakBadge days={stats?.current_streak || 0} isActiveToday={stats?.last_active_date === today} />
       </div>
 
       {/* Stats */}
@@ -75,7 +92,7 @@ export default function Dashboard() {
         <StatCard label="Topics Completed" value={completedCount} sublabel={`of ${allSubtopics.length}`} />
         <StatCard label="Overall Progress" value={`${overall.percent}%`} sublabel={`${overall.completed}/${overall.total}`} />
         <StatCard label="Current Phase" value={currentPhase ? `Phase ${currentPhase.id}` : 'Complete!'} sublabel={currentPhase?.title || ''} />
-        <StatCard label="Quizzes Taken" value="0" sublabel="Start a quiz →" />
+        <StatCard label="Quizzes Taken" value={stats?.total_quizzes_taken || 0} sublabel="Keep testing your knowledge" />
       </div>
 
       {/* Today's Motivation */}

@@ -6,7 +6,8 @@ import {
   fetchAchievements, fetchUserAchievements, awardAchievement,
   calculateLevel,
 } from '../services/gamificationService';
-import { validateStreakOnLoad } from '../services/progressUpdateService';
+import { validateStreakOnLoad, calculateStreak } from '../services/progressUpdateService';
+import { todayStr } from '../utils/helpers';
 
 export function useGamification() {
   const { user } = useAuth();
@@ -105,12 +106,13 @@ export function useGamification() {
         const totalItems = (logs || []).reduce((sum, l) => sum + (l.items_completed || 0), 0);
         const totalXp = (logs || []).reduce((sum, l) => sum + (l.xp_earned || 0), 0);
         if (totalItems > 0 || totalXp > 0) {
-          const today = new Date().toISOString().split('T')[0];
+          const streak = await calculateStreak(user.id);
+          const today = todayStr();
           await upsertUserStats(user.id, {
             total_xp: totalXp,
             total_items_completed: totalItems,
-            current_streak: 0,
-            longest_streak: 0,
+            current_streak: streak,
+            longest_streak: streak,
             last_active_date: today,
           });
           s = await fetchUserStats(user.id);

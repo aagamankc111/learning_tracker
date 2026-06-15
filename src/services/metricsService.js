@@ -1,10 +1,11 @@
 import { supabase } from '../config/supabase';
+import { localDateStr } from '../utils/helpers';
 
 export async function fetchLearningVelocity(userId, days = 30) {
   try {
     const start = new Date();
     start.setDate(start.getDate() - days);
-    const startStr = start.toISOString().split('T')[0];
+    const startStr = localDateStr(start);
 
     const { data, error } = await supabase
       .from('daily_log')

@@ -1,4 +1,5 @@
 import { useMetrics } from '../../hooks/useMetrics';
+import { localDateStr } from '../../utils/helpers';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -20,7 +21,7 @@ export default function MasteryHeatmap({ compact = false }) {
   for (let i = 55; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().split('T')[0];
+    const dateStr = localDateStr(d);
     const log = weeklyLogs.find(l => l.log_date === dateStr);
     const items = log?.items_completed || 0;
     const xp = log?.xp_earned || 0;

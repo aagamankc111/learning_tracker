@@ -1,4 +1,5 @@
 import { QUIZ_BANK } from '../data/quizData';
+import { todayStr, localDateStr } from '../utils/helpers';
 
 const STORAGE_KEY = 'spaced_repetition';
 
@@ -14,7 +15,7 @@ function saveReviews(data) {
 
 export function fetchDueReviews() {
   const reviews = loadReviews();
-  const today = new Date().toISOString().split('T')[0];
+  const today = todayStr();
   const due = [];
   for (const [qid, data] of Object.entries(reviews)) {
     if (data.next_review_date <= today) {
@@ -63,7 +64,7 @@ export function calculateNextReview(quality, previousReview) {
     easeFactor: newEaseFactor,
     intervalDays,
     repetitions,
-    nextReviewDate: nextDate.toISOString().split('T')[0],
+    nextReviewDate: localDateStr(nextDate),
     lastReviewedAt: new Date().toISOString(),
   };
 }

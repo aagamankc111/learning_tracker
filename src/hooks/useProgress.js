@@ -28,6 +28,12 @@ export function useProgress(userId) {
     if (userId) loadProgress();
   }, [userId, loadProgress]);
 
+  useEffect(() => {
+    const handler = () => loadProgress();
+    window.addEventListener('progress-updated', handler);
+    return () => window.removeEventListener('progress-updated', handler);
+  }, [loadProgress]);
+
   const toggleProgress = useCallback(async (subtopicId, completed) => {
     if (!userId) return;
 

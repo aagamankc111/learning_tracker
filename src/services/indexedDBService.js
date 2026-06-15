@@ -60,6 +60,22 @@ export async function getCachedData(storeName) {
   }
 }
 
+export async function clearCache() {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORES, 'readwrite');
+    for (const storeName of STORES) {
+      tx.objectStore(storeName).clear();
+    }
+    await new Promise((resolve, reject) => {
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch (err) {
+    console.warn('IndexedDB clear error:', err);
+  }
+}
+
 export function isOnline() {
   return navigator.onLine;
 }

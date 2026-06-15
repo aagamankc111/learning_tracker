@@ -1,25 +1,28 @@
 import { supabase } from '../config/supabase';
+import { todayStr, localDateStr } from '../utils/helpers';
 
 export async function fetchDailyMotivation(userId) {
   try {
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayStr();
     const { data, error } = await supabase
       .from('daily_motivation')
-      .select('*')
+      .select('id,user_id,motivation_date,quote,quote_author,aagaman_message,feeling,created_at')
       .eq('user_id', userId)
       .eq('motivation_date', today)
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') throw error;
+    if (error && error.code === 'PGRST116') return null;
+    if (error && error.statusCode === 406) return null;
+    if (error) throw error;
     return data;
   } catch (err) {
-    console.error('fetchDailyMotivation error:', err);
+    if (err.statusCode !== 406) console.warn('fetchDailyMotivation error:', err);
     return null;
   }
 }
 
 export async function saveDailyMotivation(userId, data) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = todayStr();
   const { error } = await supabase
     .from('daily_motivation')
     .upsert({
@@ -35,7 +38,7 @@ export async function fetchWeeklyReflection(userId) {
   try {
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
-    const startStr = weekAgo.toISOString().split('T')[0];
+    const startStr = localDateStr(weekAgo);
 
     const { data, error } = await supabase
       .from('daily_log')

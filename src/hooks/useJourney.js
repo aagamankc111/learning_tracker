@@ -4,6 +4,7 @@ import { useTopics } from './useTopics';
 import { useAuth } from '../context/AuthContext';
 import { JOURNEY_MILESTONES, LONG_TERM_MILESTONES, getCurrentMilestone } from '../data/milestones';
 import { fetchWeeklyLogs } from '../services/dailyTrackingService';
+import { localDateStr } from '../utils/helpers';
 
 export function useJourney() {
   const { user } = useAuth();
@@ -17,7 +18,7 @@ export function useJourney() {
     const end = new Date();
     const start = new Date(end);
     start.setDate(start.getDate() - 30);
-    fetchWeeklyLogs(user.id, start.toISOString().split('T')[0], end.toISOString().split('T')[0])
+    fetchWeeklyLogs(user.id, localDateStr(start), localDateStr(end))
       .then(setWeeklyData)
       .catch(() => setWeeklyData([]));
 

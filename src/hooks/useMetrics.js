@@ -8,6 +8,7 @@ import {
   calculateLearningVelocity,
 } from '../services/metricsService';
 import { fetchWeeklyLogs } from '../services/dailyTrackingService';
+import { localDateStr } from '../utils/helpers';
 
 export function useMetrics() {
   const { user } = useAuth();
@@ -33,7 +34,7 @@ export function useMetrics() {
       const end = new Date();
       const start = new Date(end);
       start.setDate(start.getDate() - 7);
-      const logs = await fetchWeeklyLogs(user.id, start.toISOString().split('T')[0], end.toISOString().split('T')[0]);
+      const logs = await fetchWeeklyLogs(user.id, localDateStr(start), localDateStr(end));
       setWeeklyLogs(logs);
     } catch (err) {
       console.error('Failed to load metrics:', err);

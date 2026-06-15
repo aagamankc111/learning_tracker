@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../config/supabase';
+import { clearCache } from '../services/indexedDBService';
 
 function SettingRow({ label, desc, children }) {
   return (
@@ -32,6 +34,58 @@ export default function SettingsPage() {
   const { user } = useAuth();
   const [emailNotifications, setEmailNotifications] = useState(false);
   const [compactView, setCompactView] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [resetDone, setResetDone] = useState(false);
+
+  const handleReset = async () => {
+    if (!user || resetting) return;
+    if (!window.confirm('This will permanently delete ALL your learning progress. Are you sure?')) return;
+    setResetting(true);
+    try {
+      const uid = user.id;
+      console.log('[Reset] Starting reset for user:', uid);
+
+      const r1 = await supabase.from('daily_progress').delete().eq('user_id', uid);
+      console.log('[Reset] daily_progress delete:', r1.status, r1.error || 'ok');
+
+      const r2 = await supabase.from('daily_log').delete().eq('user_id', uid);
+      console.log('[Reset] daily_log delete:', r2.status, r2.error || 'ok');
+
+      const r3 = await supabase.from('user_stats').delete().eq('user_id', uid);
+      console.log('[Reset] user_stats delete:', r3.status, r3.error || 'ok');
+
+      const { error: insErr } = await supabase.from('user_stats').insert({
+        user_id: uid,
+        current_streak: 0, longest_streak: 0, total_xp: 0,
+        total_items_completed: 0,
+      });
+      if (insErr) {
+        console.error('[Reset] user_stats insert failed:', insErr);
+        throw insErr;
+      }
+      console.log('[Reset] user_stats insert: ok');
+
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('wt_progress_')) localStorage.removeItem(key);
+      }
+      console.log('[Reset] localStorage cleared');
+
+      await clearCache();
+      console.log('[Reset] Cache cleared');
+
+      setResetDone(true);
+
+      setTimeout(() => {
+        setResetDone(false);
+        window.location.reload();
+      }, 1500);
+    } catch (err) {
+      console.error('[Reset] FAILED:', err);
+      alert('Reset failed: ' + err.message + ' (see console for details)');
+      setResetting(false);
+    }
+  };
 
   return (
     <div className="space-y-5 max-w-xl">
@@ -99,8 +153,9 @@ export default function SettingsPage() {
       {/* Danger Zone */}
       <div className="bg-surface-card border border-red-500/20 rounded-xl p-4">
         <h3 className="text-sm font-medium text-red-400 mb-2">Danger Zone</h3>
-        <button className="px-4 py-2 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-xs font-medium hover:bg-red-500/20 transition">
-          Reset All Progress
+        <button onClick={handleReset} disabled={resetting}
+          className="px-4 py-2 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-xs font-medium hover:bg-red-500/20 transition disabled:opacity-50">
+          {resetting ? 'Resetting...' : resetDone ? 'Done!' : 'Reset All Progress'}
         </button>
         <p className="text-[10px] text-gray-600 mt-2">This will permanently delete all your learning progress.</p>
       </div>

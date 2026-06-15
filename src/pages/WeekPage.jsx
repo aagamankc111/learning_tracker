@@ -1,9 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../config/supabase';
 import curriculum from '../data/curriculum';
 import { hasEnrichment } from '../data/curriculum-enrichment';
 import { handleItemCheck } from '../services/progressUpdateService';
+import { useAuth } from '../context/AuthContext';
+import { useProgress } from '../hooks/useProgress';
 
 const STORAGE_PREFIX = 'wt_progress';
 
@@ -21,6 +23,8 @@ function updateLocalStorage(phaseId, day, checkedMap) {
 
 export default function WeekPage() {
   const { phaseId } = useParams();
+  const { user } = useAuth();
+  const { progressMap } = useProgress(user?.id);
   const week = curriculum.weeks.find((w) => w.id === Number(phaseId));
   const [checkedMap, setCheckedMap] = useState({});
   const [openDay, setOpenDay] = useState(null);
@@ -33,8 +37,6 @@ export default function WeekPage() {
     async function load() {
       const map = {};
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const user = session?.user;
         if (user) {
           const { data, error } = await supabase
             .from('daily_progress')
@@ -80,7 +82,7 @@ export default function WeekPage() {
     handleHash();
     window.addEventListener('hashchange', handleHash);
     return () => window.removeEventListener('hashchange', handleHash);
-  }, [week?.id]);
+  }, [week?.id, user?.id]);
 
   const handleCheck = useCallback(async (day, index) => {
     const key = `${day.day}-${index}`;
@@ -93,8 +95,6 @@ export default function WeekPage() {
       return updated;
     });
 
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
     if (user) {
       try {
         await handleItemCheck(user.id, week.id, day.day, index, newCompleted);
@@ -103,7 +103,7 @@ export default function WeekPage() {
         console.error('Failed to sync:', err);
       }
     }
-  }, [week?.id]);
+  }, [week?.id, user]);
 
   if (!week) {
     return (
@@ -114,8 +114,17 @@ export default function WeekPage() {
     );
   }
 
-  const totalItems = week.days.reduce((s, d) => s + d.reviewItems.length, 0);
-  const checkedCount = week.days.reduce((s, d) => s + d.reviewItems.filter((_, i) => checkedMap[`${d.day}-${i}`]).length, 0);
+  const phaseSubtopics = useMemo(() => {
+    const items = [];
+    for (const day of week.days) {
+      for (const topic of day.topics) {
+        items.push({ id: `${week.id}-${day.day}-${topic}` });
+      }
+    }
+    return items;
+  }, [week]);
+  const phaseDone = phaseSubtopics.filter(s => progressMap[s.id]).length;
+  const phaseTotal = phaseSubtopics.length;
   const phaseIcons = ['🖥️', '☁️', '🤖', '🚀', '🔬', '📐', '🏭', '🧠', '🏆'];
 
   return (
@@ -129,7 +138,7 @@ export default function WeekPage() {
                 Phase {week.id}
               </span>
               <span className="text-gray-500 text-xs">
-                {checkedCount}/{totalItems} items
+                {phaseDone}/{phaseTotal} topics
               </span>
             </div>
             <h1 className="text-xl font-semibold text-gray-100">{week.title}</h1>
@@ -143,10 +152,10 @@ export default function WeekPage() {
           <div className="flex items-center gap-3">
             <div className="flex-1 bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
               <div className="h-full bg-accent rounded-full transition-all duration-700"
-                style={{ width: totalItems > 0 ? `${(checkedCount / totalItems) * 100}%` : '0%' }} />
+                style={{ width: phaseTotal > 0 ? `${(phaseDone / phaseTotal) * 100}%` : '0%' }} />
             </div>
             <span className="text-xs font-mono text-accent">
-              {totalItems > 0 ? Math.round((checkedCount / totalItems) * 100) : 0}%
+              {phaseTotal > 0 ? Math.round((phaseDone / phaseTotal) * 100) : 0}%
             </span>
           </div>
         </div>

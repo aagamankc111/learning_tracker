@@ -1,53 +1,32 @@
 import { supabase } from '../config/supabase';
-
-function todayStr() {
-  return new Date().toISOString().split('T')[0];
-}
+import { todayStr, localDateStr } from '../utils/helpers';
 
 async function calculateStreak(userId) {
   const start = new Date();
   start.setDate(start.getDate() - 90);
-  const startStr = start.toISOString().split('T')[0];
+  const startStr = localDateStr(start);
 
-  const { data: progressData } = await supabase
-    .from('daily_progress')
-    .select('week_number, day, completed, updated_at')
+  const { data: logs } = await supabase
+    .from('daily_log')
+    .select('log_date, items_completed')
     .eq('user_id', userId)
-    .eq('completed', true)
-    .gte('updated_at', startStr);
+    .gte('log_date', startStr);
 
-  if (!progressData || progressData.length === 0) return 0;
+  if (!logs || logs.length === 0) return 0;
 
-  const dayCounts = {};
-  for (const row of progressData) {
-    const key = `${row.week_number}_${row.day}`;
-    if (!dayCounts[key]) {
-      dayCounts[key] = { count: 0, date: null };
-    }
-    dayCounts[key].count++;
-    const rowDate = row.updated_at.split('T')[0];
-    if (!dayCounts[key].date || rowDate > dayCounts[key].date) {
-      dayCounts[key].date = rowDate;
-    }
-  }
-
-  const completedDates = new Set();
-  for (const [, info] of Object.entries(dayCounts)) {
-    if (info.count >= 1 && info.date) {
-      completedDates.add(info.date);
-    }
-  }
+  const completedDates = new Set(
+    logs.filter(l => l.items_completed > 0).map(l => l.log_date)
+  );
 
   if (completedDates.size === 0) return 0;
 
   let streak = 0;
   let missedDays = 0;
-  const today = todayStr();
 
   for (let i = 0; i < 90; i++) {
     const d = new Date();
     d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().split('T')[0];
+    const dateStr = localDateStr(d);
 
     if (completedDates.has(dateStr)) {
       streak++;
@@ -152,3 +131,23 @@ export async function validateStreakOnLoad(userId) {
     }
   }
 }
+
+export async function syncPhaseProgress(userId, week, day, checkedMap) {
+  const allChecked = day.reviewItems.length > 0 &&
+    day.reviewItems.every((_, j) => checkedMap[`${day.day}-${j}`]);
+
+  for (const topic of day.topics) {
+    const subtopicId = `${week.id}-${day.day}-${topic}`;
+    await supabase
+      .from('user_progress')
+      .upsert({
+        user_id: userId,
+        subtopic_id: subtopicId,
+        completed: allChecked,
+        completed_at: allChecked ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,subtopic_id' });
+  }
+}
+
+export { calculateStreak };

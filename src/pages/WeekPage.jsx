@@ -3,44 +3,35 @@ import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../config/supabase';
 import curriculum from '../data/curriculum';
 import { hasEnrichment } from '../data/curriculum-enrichment';
-import FadeIn from '../components/common/FadeIn';
-import MiniMotivationBar from '../components/Motivation/MiniMotivationBar';
-import { useNotifications } from '../context/NotificationContext';
 import { handleItemCheck } from '../services/progressUpdateService';
 
 const STORAGE_PREFIX = 'wt_progress';
 
-function getStorageKey(weekId, day) {
-  return `${STORAGE_PREFIX}_week${weekId}_day${day}`;
+function getStorageKey(phaseId, day) {
+  return `${STORAGE_PREFIX}_phase${phaseId}_day${day}`;
 }
 
-function updateLocalStorage(weekId, day, checkedMap) {
+function updateLocalStorage(phaseId, day, checkedMap) {
   const dayData = {};
   for (const [key, val] of Object.entries(checkedMap)) {
-    if (key.startsWith(`${day}-`)) {
-      dayData[key] = val;
-    }
+    if (key.startsWith(`${day}-`)) dayData[key] = val;
   }
-  localStorage.setItem(
-    getStorageKey(weekId, day),
-    JSON.stringify(dayData)
-  );
+  localStorage.setItem(getStorageKey(phaseId, day), JSON.stringify(dayData));
 }
 
 export default function WeekPage() {
-  const { weekId } = useParams();
-  const week = curriculum.weeks.find((w) => w.id === Number(weekId));
+  const { phaseId } = useParams();
+  const week = curriculum.weeks.find((w) => w.id === Number(phaseId));
   const [checkedMap, setCheckedMap] = useState({});
   const [openDay, setOpenDay] = useState(null);
   const dayRefs = useRef({});
-  const { notify } = useNotifications();
+  const checkedMapRef = useRef(checkedMap);
+  checkedMapRef.current = checkedMap;
 
   useEffect(() => {
     if (!week) return;
-
     async function load() {
       const map = {};
-
       try {
         const { data: { session } } = await supabase.auth.getSession();
         const user = session?.user;
@@ -50,23 +41,13 @@ export default function WeekPage() {
             .select('day, item_index, completed')
             .eq('user_id', user.id)
             .eq('week_number', week.id);
-
-          if (error) {
-            console.error('Supabase load error:', error);
-            throw error;
-          }
-
-          if (data) {
+          if (!error && data) {
             for (const row of data) {
-              if (row.completed) {
-                map[`${row.day}-${row.item_index}`] = true;
-              }
+              if (row.completed) map[`${row.day}-${row.item_index}`] = true;
             }
           }
         }
-      } catch (err) {
-        console.warn('Supabase load failed, using localStorage:', err.message);
-      }
+      } catch (err) { console.warn('Supabase load failed:', err.message); }
 
       for (const day of week.days) {
         const stored = localStorage.getItem(getStorageKey(week.id, day.day));
@@ -74,17 +55,13 @@ export default function WeekPage() {
           try {
             const local = JSON.parse(stored);
             for (const key of Object.keys(local)) {
-              if (!(key in map)) {
-                map[key] = local[key];
-              }
+              if (!(key in map)) map[key] = local[key];
             }
           } catch {}
         }
       }
-
       setCheckedMap(map);
     }
-
     load();
 
     const handleHash = () => {
@@ -100,14 +77,10 @@ export default function WeekPage() {
         }
       }
     };
-
     handleHash();
     window.addEventListener('hashchange', handleHash);
     return () => window.removeEventListener('hashchange', handleHash);
   }, [week?.id]);
-
-  const checkedMapRef = useRef(checkedMap);
-  checkedMapRef.current = checkedMap;
 
   const handleCheck = useCallback(async (day, index) => {
     const key = `${day.day}-${index}`;
@@ -120,106 +93,75 @@ export default function WeekPage() {
       return updated;
     });
 
-    if (newCompleted) {
-      notify('xp', { xp: 5, reason: `Completed: ${day.reviewItems[index]}`, totalXp: '...' });
-    }
-
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user;
     if (user) {
       try {
-        if (newCompleted) {
-          const dayTotal = day.reviewItems.length;
-          const checkedBefore = day.reviewItems.filter((_, i) => currentMap[`${day.day}-${i}`]).length;
-          const isDayComplete = (checkedBefore + 1) >= dayTotal && dayTotal > 0;
-
-          const result = await handleItemCheck(user.id, week.id, day.day, index, true);
-
-          if (isDayComplete && result?.current_streak > 0) {
-            notify('streak', { streak: result.current_streak });
-          }
-        } else {
-          const payload = {
-            user_id: user.id, week_number: week.id, day: day.day,
-            item_index: index, completed: false, updated_at: new Date().toISOString(),
-          };
-          const { error } = await supabase
-            .from('daily_progress')
-            .upsert(payload, { onConflict: 'user_id,week_number,day,item_index' });
-          if (error) throw error;
-        }
+        await handleItemCheck(user.id, week.id, day.day, index, newCompleted);
         window.dispatchEvent(new CustomEvent('progress-updated'));
       } catch (err) {
-        console.error('Failed to sync to Supabase, progress kept in localStorage:', err);
+        console.error('Failed to sync:', err);
       }
     }
-  }, [week?.id, notify]);
+  }, [week?.id]);
 
   if (!week) {
     return (
       <div className="text-center py-20">
-        <p className="text-gray-500 dark:text-gray-400">Week not found.</p>
-        <Link to="/" className="text-indigo-600 dark:text-indigo-400 hover:underline mt-2 inline-block">← Back to Dashboard</Link>
+        <p className="text-gray-500">Phase not found.</p>
+        <Link to="/" className="text-accent hover:underline mt-2 inline-block text-sm">← Back to Dashboard</Link>
       </div>
     );
   }
 
   const totalItems = week.days.reduce((s, d) => s + d.reviewItems.length, 0);
   const checkedCount = week.days.reduce((s, d) => s + d.reviewItems.filter((_, i) => checkedMap[`${d.day}-${i}`]).length, 0);
+  const phaseIcons = ['🖥️', '☁️', '🤖', '🚀', '🔬', '📐', '🏭', '🧠', '🏆'];
 
   return (
-    <div className="space-y-6">
-      {/* Week Header */}
-      <FadeIn>
-        <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-xl">
-          <div className="flex items-start justify-between flex-wrap gap-4">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
-                  Phase {week.id}
-                </span>
-                <span className="text-white/60 text-xs">
-                  {checkedCount}/{totalItems} items checked
-                </span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-bold">{week.title}</h1>
-              <p className="text-white/80 mt-1 text-sm">{week.subtitle}</p>
-              <p className="text-white/60 text-sm mt-2 max-w-xl">{week.description}</p>
-            </div>
-            <span className="text-3xl sm:text-4xl opacity-70">{['🖥️', '☁️', '🤖', '🚀', '🔬', '📐', '🏭', '🧠', '🏆'][week.id - 1]}</span>
-          </div>
-
-          <div className="mt-5">
-            <div className="flex items-center gap-3">
-              <div className="flex-1 bg-white/20 rounded-full h-2 overflow-hidden">
-                <div
-                  className="h-full bg-white rounded-full transition-all duration-700 ease-out"
-                  style={{ width: totalItems > 0 ? `${(checkedCount / totalItems) * 100}%` : '0%' }}
-                />
-              </div>
-              <span className="text-sm font-medium text-white">
-                {totalItems > 0 ? Math.round((checkedCount / totalItems) * 100) : 0}%
+    <div className="space-y-5">
+      {/* Phase Header */}
+      <div className="bg-surface-card border border-white/[0.06] rounded-xl p-5">
+        <div className="flex items-start justify-between flex-wrap gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-block px-2 py-0.5 rounded text-[10px] font-medium bg-accent/10 text-accent">
+                Phase {week.id}
+              </span>
+              <span className="text-gray-500 text-xs">
+                {checkedCount}/{totalItems} items
               </span>
             </div>
+            <h1 className="text-xl font-semibold text-gray-100">{week.title}</h1>
+            <p className="text-gray-500 mt-0.5 text-sm">{week.subtitle}</p>
+            <p className="text-gray-600 text-xs mt-2 max-w-xl">{week.description}</p>
           </div>
+          <span className="text-2xl opacity-60">{phaseIcons[week.id - 1]}</span>
+        </div>
 
-          <div className="flex flex-wrap gap-3 mt-4">
-            <Link to={week.id < 9 ? `/week/${week.id + 1}` : '/projects'}
-              className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition text-white">
-              {week.id < 9 ? 'Next Phase →' : 'View Projects →'}
-            </Link>
-            <Link to="/daily-review"
-              className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition text-white border border-white/20">
-              Daily Review
-            </Link>
+        <div className="mt-4">
+          <div className="flex items-center gap-3">
+            <div className="flex-1 bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
+              <div className="h-full bg-accent rounded-full transition-all duration-700"
+                style={{ width: totalItems > 0 ? `${(checkedCount / totalItems) * 100}%` : '0%' }} />
+            </div>
+            <span className="text-xs font-mono text-accent">
+              {totalItems > 0 ? Math.round((checkedCount / totalItems) * 100) : 0}%
+            </span>
           </div>
         </div>
-      </FadeIn>
 
-      {/* Mini Motivation Bar */}
-      <FadeIn delay={80}>
-        <MiniMotivationBar compact />
-      </FadeIn>
+        <div className="flex flex-wrap gap-2 mt-4">
+          <Link to={week.id < 9 ? `/phase/${week.id + 1}` : '/quiz'}
+            className="px-3 py-1.5 bg-accent text-white rounded-lg text-xs font-medium hover:bg-accent-dim transition">
+            {week.id < 9 ? 'Next Phase →' : 'Take Quiz →'}
+          </Link>
+          <Link to="/daily-review"
+            className="px-3 py-1.5 bg-white/[0.06] text-gray-300 rounded-lg text-xs font-medium hover:bg-white/[0.1] transition">
+            Daily Review
+          </Link>
+        </div>
+      </div>
 
       {/* Quick Day Navigation */}
       <div className="flex gap-1.5 flex-wrap">
@@ -228,23 +170,19 @@ export default function WeekPage() {
           const dayTotal = day.reviewItems.length;
           const done = dayChecked === dayTotal && dayTotal > 0;
           return (
-            <button
-              key={day.day}
-              onClick={() => {
-                setOpenDay(day.day);
-                window.location.hash = `day-${day.day}`;
-                const el = document.getElementById(`day-${day.day}`);
-                if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-              }}
+            <button key={day.day} onClick={() => {
+              setOpenDay(day.day);
+              window.location.hash = `day-${day.day}`;
+              const el = document.getElementById(`day-${day.day}`);
+              if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+            }}
               className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition border ${
-                openDay === day.day
-                  ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-700 shadow-sm'
-                  : done
-                  ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300'
-                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:bg-dark-800 dark:text-gray-300 dark:border-dark-600 dark:hover:border-dark-500 dark:hover:bg-dark-700'
-              }`}
-              title={`${day.title} (${dayChecked}/${dayTotal})`}
-            >
+                done
+                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                  : openDay === day.day
+                  ? 'border-accent/30 bg-accent/10 text-accent'
+                  : 'border-white/[0.06] bg-surface-card text-gray-500 hover:text-gray-300 hover:border-white/[0.12]'
+              }`}>
               D{day.day}
             </button>
           );
@@ -252,89 +190,75 @@ export default function WeekPage() {
       </div>
 
       {/* Day-by-Day Breakdown */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Daily Breakdown</h2>
-
+      <div className="space-y-3">
         {week.days.map((day, i) => {
           const dayChecked = day.reviewItems.filter((_, j) => checkedMap[`${day.day}-${j}`]).length;
           const dayTotal = day.reviewItems.length;
+          const dayDone = dayChecked === dayTotal && dayTotal > 0;
 
           return (
-            <FadeIn key={day.day} delay={i * 75}>
-              <details
-                id={`day-${day.day}`}
-                ref={(el) => { dayRefs.current[day.day] = el; }}
-                open={openDay === day.day}
-                className="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden open:shadow-md transition-all dark:bg-dark-800 dark:border-dark-700"
-                onToggle={(e) => {
-                  if (e.target.open) setOpenDay(day.day);
-                }}
-              >
-                <summary className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-700 transition select-none list-none">
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center shrink-0">
-                      <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">D{day.day}</span>
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="font-semibold text-gray-800 dark:text-gray-100 text-sm sm:text-base truncate">{day.title}</h3>
-                      <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                        <span className="flex flex-wrap gap-x-2 gap-y-0.5">
-                          {day.topics.map((t) => {
-                            const slug = t.toLowerCase().replace(/\s+/g, '-');
-                            const hasEnr = hasEnrichment(day.day, t);
-                            return (
-                              <Link
-                                key={t}
-                                to={`/week/${week.id}/day/${day.day}/topic/${slug}`}
-                                className={`transition ${hasEnr ? 'text-indigo-600 hover:text-indigo-800 hover:underline dark:text-indigo-400 dark:hover:text-indigo-300' : 'text-gray-400 dark:text-gray-500'}`}
-                                title={hasEnr ? 'View enrichment details' : 'No enrichment data'}
-                              >
-                                {t}{hasEnr ? ' 📖' : ''}
-                              </Link>
-                            );
-                          })}
-                        </span>
-                        <span className="text-gray-300 dark:text-gray-500">|</span>
-                        <span className={dayChecked === dayTotal && dayTotal > 0 ? 'text-indigo-600 dark:text-indigo-400 font-medium' : ''}>
-                          {dayChecked}/{dayTotal}
-                        </span>
-                      </div>
+            <details key={day.day} id={`day-${day.day}`}
+              ref={(el) => { dayRefs.current[day.day] = el; }}
+              open={openDay === day.day}
+              className="group bg-surface-card border border-white/[0.06] rounded-xl overflow-hidden open:border-accent/20 transition-all"
+              onToggle={(e) => { if (e.target.open) setOpenDay(day.day); }}>
+              <summary className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-white/[0.02] transition select-none list-none">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                    <span className="text-xs font-bold text-accent">D{day.day}</span>
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-medium text-gray-200 text-sm truncate">{day.title}</h3>
+                    <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+                      <span className="flex flex-wrap gap-x-2 gap-y-0.5">
+                        {day.topics.map((t) => {
+                          const slug = t.toLowerCase().replace(/\s+/g, '-');
+                          const hasEnr = hasEnrichment(day.day, t);
+                          return (
+                            <Link key={t}
+                              to={`/phase/${week.id}/day/${day.day}/topic/${slug}`}
+                              className={`transition ${dayDone ? 'text-emerald-400 hover:text-emerald-300 hover:underline' : hasEnr ? 'text-accent hover:text-accent-hover hover:underline' : 'text-gray-500'}`}>
+                              {t}{hasEnr ? ' 📖' : ''}
+                            </Link>
+                          );
+                        })}
+                      </span>
+                      <span className="text-gray-600">|</span>
+                      <span className={dayDone ? 'text-emerald-400 font-medium' : ''}>
+                        {dayChecked}/{dayTotal}
+                      </span>
                     </div>
                   </div>
-                  <svg className="w-5 h-5 text-gray-400 dark:text-gray-500 shrink-0 transition-transform duration-200 group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                  </svg>
-                </summary>
+                </div>
+                <svg className="w-4 h-4 text-gray-600 shrink-0 transition-transform duration-200 group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </summary>
 
-                <div className="px-5 pb-5 border-t border-gray-50 dark:border-dark-700/50">
+              <div className="px-4 pb-4 border-t border-white/[0.06]">
+                <div className="mt-3 space-y-3">
                   {/* Key Concepts */}
-                  <div className="mt-4">
-                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Key Concepts</p>
-                    <pre className="p-4 rounded-lg bg-gray-900 dark:bg-black text-sm text-gray-100 dark:text-gray-200 font-mono leading-relaxed whitespace-pre-wrap overflow-x-auto border border-gray-700/50">
+                  <div>
+                    <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1.5">Concepts</p>
+                    <div className="text-xs text-gray-400 leading-relaxed bg-surface/80 border border-white/[0.06] rounded-lg p-3 font-mono whitespace-pre-wrap">
                       {day.keyConcepts}
-                    </pre>
+                    </div>
                   </div>
 
                   {/* Review Items */}
-                  <div className="mt-4">
-                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Must-Know Checklist</p>
-                    <div className="space-y-1.5">
+                  <div>
+                    <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1.5">Checklist</p>
+                    <div className="space-y-1">
                       {day.reviewItems.map((item, j) => {
                         const checked = checkedMap[`${day.day}-${j}`];
                         return (
-                          <label
-                            key={j}
-                            className={`flex items-start gap-2.5 p-2 rounded-lg transition-all cursor-pointer group/check ${
-                              checked ? 'bg-indigo-50/50 dark:bg-indigo-900/20' : 'hover:bg-gray-50 dark:hover:bg-dark-700'
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={!!checked}
-                              onChange={() => handleCheck(day, j)}
-                              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 accent-indigo-600 cursor-pointer dark:text-indigo-400"
-                            />
-                            <span className={`text-sm transition-colors ${checked ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-600 dark:text-gray-300'}`}>
+                          <label key={j}
+                            className={`flex items-start gap-2.5 p-2 rounded-lg transition-all cursor-pointer ${
+                              checked ? 'bg-accent/5' : 'hover:bg-white/[0.02]'
+                            }`}>
+                            <input type="checkbox" checked={!!checked} onChange={() => handleCheck(day, j)}
+                              className="mt-0.5 h-3.5 w-3.5 rounded border-white/[0.12] bg-transparent accent-accent cursor-pointer" />
+                            <span className={`text-xs transition-colors ${checked ? 'line-through text-gray-600' : 'text-gray-400'}`}>
                               {item}
                             </span>
                           </label>
@@ -344,56 +268,56 @@ export default function WeekPage() {
                   </div>
 
                   {/* Key Commands */}
-                  <div className="mt-4">
-                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Key Commands</p>
-                    <div className="grid sm:grid-cols-2 gap-2">
+                  <div>
+                    <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1.5">Commands</p>
+                    <div className="grid sm:grid-cols-2 gap-1.5">
                       {day.keyCommands.map((cmd, j) => (
-                        <div key={j} className="bg-gray-900 text-green-400 text-xs font-mono px-3 py-2 rounded-lg overflow-x-auto dark:bg-dark-900 dark:text-green-300">
+                        <pre key={j} className="bg-surface/80 border border-white/[0.06] text-gray-300 text-xs font-mono px-3 py-2 rounded-lg overflow-x-auto">
                           $ {cmd}
-                        </div>
+                        </pre>
                       ))}
                     </div>
                   </div>
 
-                  {/* Project Idea */}
-                  <div className="mt-4">
-                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Mini Project</p>
-                    <pre className="p-4 rounded-lg bg-gray-900 dark:bg-black text-sm text-green-400 dark:text-green-300 font-mono leading-relaxed whitespace-pre-wrap overflow-x-auto border border-gray-700/50">
+                  {/* Project */}
+                  <div>
+                    <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1.5">Project</p>
+                    <div className="text-xs text-gray-400 leading-relaxed bg-surface/80 border border-white/[0.06] rounded-lg p-3 font-mono">
                       {day.projectIdeas}
-                    </pre>
+                    </div>
                   </div>
                 </div>
-              </details>
-            </FadeIn>
+              </div>
+            </details>
           );
         })}
       </div>
 
-      {/* Navigation between weeks */}
-      <div className="flex justify-between items-center pt-4 border-t border-gray-100 dark:border-dark-700">
+      {/* Navigation */}
+      <div className="flex justify-between items-center pt-3 border-t border-white/[0.06]">
         <div>
           {week.id > 1 ? (
-            <Link to={`/week/${week.id - 1}`}
-              className="text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-700">
+            <Link to={`/phase/${week.id - 1}`}
+              className="text-xs text-gray-500 hover:text-accent transition flex items-center gap-1 px-2 py-1.5 rounded-lg hover:bg-white/[0.04]">
               ← Phase {week.id - 1}
             </Link>
           ) : (
             <Link to="/"
-              className="text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-700">
+              className="text-xs text-gray-500 hover:text-accent transition flex items-center gap-1 px-2 py-1.5 rounded-lg hover:bg-white/[0.04]">
               ← Dashboard
             </Link>
           )}
         </div>
         <div>
           {week.id < 9 ? (
-            <Link to={`/week/${week.id + 1}`}
-              className="text-sm text-white font-medium px-4 py-2 rounded-lg transition shadow bg-indigo-600 hover:bg-indigo-700">
+            <Link to={`/phase/${week.id + 1}`}
+              className="text-xs text-white font-medium px-3 py-1.5 rounded-lg transition bg-accent hover:bg-accent-dim">
               Phase {week.id + 1} →
             </Link>
           ) : (
-            <Link to="/projects"
-              className="text-sm text-white font-medium px-4 py-2 rounded-lg transition shadow bg-indigo-600 hover:bg-indigo-700">
-              View Projects →
+            <Link to="/quiz"
+              className="text-xs text-white font-medium px-3 py-1.5 rounded-lg transition bg-accent hover:bg-accent-dim">
+              Take Quiz →
             </Link>
           )}
         </div>

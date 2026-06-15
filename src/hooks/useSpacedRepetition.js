@@ -1,22 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../context/AuthContext';
 import {
   fetchDueReviews, fetchAllReviews, upsertReview, calculateNextReview,
 } from '../services/spacedRepetitionService';
 
 export function useSpacedRepetition() {
-  const { user } = useAuth();
   const [dueReviews, setDueReviews] = useState([]);
   const [allReviews, setAllReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const loadAll = useCallback(async () => {
-    if (!user) return;
     setLoading(true);
     try {
       const [due, all] = await Promise.all([
-        fetchDueReviews(user.id),
-        fetchAllReviews(user.id),
+        fetchDueReviews(),
+        fetchAllReviews(),
       ]);
       setDueReviews(due);
       setAllReviews(all);
@@ -25,25 +22,28 @@ export function useSpacedRepetition() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, []);
 
-  useEffect(() => {
-    loadAll();
-  }, [loadAll]);
+  useEffect(() => { loadAll(); }, [loadAll]);
 
-  const submitReview = useCallback(async (subtopicId, quality) => {
-    if (!user) return;
-    const existing = allReviews.find((r) => r.subtopic_id === subtopicId);
+  const submitReview = useCallback(async (questionId, quality) => {
+    const existing = allReviews.find((r) => r.question?.id === questionId);
     const next = calculateNextReview(quality, existing);
-    await upsertReview(user.id, subtopicId, next);
+    upsertReview(questionId, next);
     await loadAll();
-  }, [user, allReviews, loadAll]);
+  }, [allReviews, loadAll]);
 
-  const dueCount = dueReviews.length;
-  const totalReviewCount = allReviews.length;
+  const addToReview = useCallback(async (questionId) => {
+    const existing = allReviews.find((r) => r.question?.id === questionId);
+    if (!existing) {
+      const next = calculateNextReview(5, null);
+      upsertReview(questionId, next);
+      await loadAll();
+    }
+  }, [allReviews, loadAll]);
 
   return {
-    dueReviews, allReviews, dueCount, totalReviewCount, loading,
-    submitReview, refresh: loadAll,
+    dueReviews, allReviews, dueCount: dueReviews.length, totalReviewCount: allReviews.length, loading,
+    submitReview, addToReview, refresh: loadAll,
   };
 }

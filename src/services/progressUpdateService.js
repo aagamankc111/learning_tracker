@@ -1,5 +1,4 @@
 import { supabase } from '../config/supabase';
-import curriculum from '../data/curriculum';
 
 function todayStr() {
   return new Date().toISOString().split('T')[0];
@@ -32,17 +31,9 @@ async function calculateStreak(userId) {
     }
   }
 
-  const dayTotals = {};
-  for (const week of curriculum.weeks) {
-    for (const d of week.days) {
-      dayTotals[`${week.id}_${d.day}`] = d.reviewItems.length;
-    }
-  }
-
   const completedDates = new Set();
-  for (const [key, info] of Object.entries(dayCounts)) {
-    const total = dayTotals[key];
-    if (total > 0 && info.count >= total && info.date) {
+  for (const [, info] of Object.entries(dayCounts)) {
+    if (info.count >= 1 && info.date) {
       completedDates.add(info.date);
     }
   }
@@ -63,7 +54,7 @@ async function calculateStreak(userId) {
       missedDays = 0;
     } else {
       missedDays++;
-      if (missedDays >= 2) break;
+      if (missedDays >= 1) break;
     }
   }
 

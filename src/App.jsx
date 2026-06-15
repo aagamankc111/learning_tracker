@@ -5,18 +5,15 @@ import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider, useNotifications } from './context/NotificationContext';
 import AuthForm from './components/Auth/AuthForm';
 import PageLayout from './components/Layout/PageLayout';
-import Home from './pages/Home';
-import WeekPage from './pages/WeekPage';
-import ProjectsPage from './pages/ProjectsPage';
-import DailyReviewPage from './pages/DailyReviewPage';
-import IndustryInsightsPage from './pages/IndustryInsightsPage';
-import PracticePage from './pages/PracticePage';
-import QuizPage from './pages/QuizPage';
-import ReviewsPage from './pages/ReviewsPage';
-import NotesPage from './pages/NotesPage';
-import MotivationPage from './pages/MotivationPage';
-import AnalyticsPage from './pages/AnalyticsPage';
+import Dashboard from './pages/Dashboard';
+import PhasePage from './pages/WeekPage';
 import TopicDetailPage from './pages/TopicDetailPage';
+import DailyReviewPage from './pages/DailyReviewPage';
+import QuizEngine from './pages/QuizEngine';
+import JourneyHub from './pages/JourneyHub';
+import SettingsPage from './pages/SettingsPage';
+import ResourcesPage from './pages/ResourcesPage';
+import CheatsheetPage from './pages/CheatsheetPage';
 import LoadingSpinner from './components/common/LoadingSpinner';
 
 function ProtectedRoutes() {
@@ -35,7 +32,7 @@ function ProtectedRoutes() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-surface">
         <LoadingSpinner message="Checking session..." />
       </div>
     );
@@ -48,18 +45,15 @@ function ProtectedRoutes() {
   return (
     <PageLayout>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/week/:weekId" element={<WeekPage />} />
-        <Route path="/week/:weekId/day/:dayNumber/topic/:topicName" element={<TopicDetailPage />} />
-        <Route path="/projects" element={<ProjectsPage />} />
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/phase/:phaseId" element={<PhasePage />} />
+        <Route path="/phase/:phaseId/day/:dayNumber/topic/:topicName" element={<TopicDetailPage />} />
         <Route path="/daily-review" element={<DailyReviewPage />} />
-        <Route path="/industry-insights" element={<IndustryInsightsPage />} />
-        <Route path="/practice" element={<PracticePage />} />
-        <Route path="/quiz" element={<QuizPage />} />
-        <Route path="/reviews" element={<ReviewsPage />} />
-        <Route path="/notes" element={<NotesPage />} />
-        <Route path="/motivation" element={<MotivationPage />} />
-        <Route path="/analytics" element={<AnalyticsPage />} />
+        <Route path="/quiz" element={<QuizEngine />} />
+        <Route path="/journey" element={<JourneyHub />} />
+        <Route path="/resources" element={<ResourcesPage />} />
+        <Route path="/cheatsheet" element={<CheatsheetPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
       </Routes>
     </PageLayout>
   );
@@ -70,7 +64,7 @@ function LoginPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-surface">
         <LoadingSpinner message="Checking session..." />
       </div>
     );

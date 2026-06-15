@@ -2025,6 +2025,368 @@ const CURRICULUM_ENRICHMENT = {
           "failure": "Docker manages iptables dynamically — saving/restoring can conflict with Docker's rules."
         }
       ]
+    },
+    "Container Networking": {
+      "example": {
+        "command": "docker network ls && docker network inspect bridge --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' && docker run -d --name web --network bridge nginx && docker inspect web --format '{{.NetworkSettings.IPAddress}}'",
+        "output": "NETWORK ID  NAME    DRIVER  SCOPE\n1234567890  bridge  bridge  local\n2345678901  host    host    local\n3456789012  none    null    local\n172.17.0.0/16\n172.17.0.2",
+        "explanation": "Docker creates default bridge (172.17.0.0/16). Container 'web' gets 172.17.0.2 on that bridge. Other containers on same bridge reach it by IP. DNS resolution by name requires a user-defined custom bridge.",
+        "productionMeaning": "Default bridge lacks DNS-based service discovery. Always create a custom bridge (docker network create mynet) for app-to-app communication. In Compose, Docker creates one per project automatically with DNS resolution."
+      },
+      "productionScenario": "Microservice A can't reach microservice B by hostname 'service-b'. Both on default bridge. Fix: create custom bridge, attach both containers. Now A resolves B via Docker DNS. In Compose, this works out of the box with service names.",
+      "failureScenario": {
+        "description": "Overlay network MTU mismatch — containers across hosts can't communicate, pods CrashLoopBackOff with 'connection refused'.",
+        "severity": "S2",
+        "impact": "Cross-host container communication broken, service discovery fails."
+      },
+      "troubleshootingFlow": [
+        "SYMPTOM: containers on same host can't communicate by name",
+        "CHECK: docker network ls — check available networks",
+        "CHECK: docker inspect container — verify network config",
+        "CHECK: docker network inspect mynet — check containers attached",
+        "ROOT CAUSE: containers on different user-defined networks or default bridge",
+        "FIX: docker network connect mynet container_a container_b",
+        "VERIFY: docker exec container_a ping container_b"
+      ],
+      "architectureView": "Container networking modes: bridge (NAT, isolated), host (no isolation, perf), overlay (multi-host, VXLAN), macvlan (direct MAC). CNI plugins: Calico (eBPF + NetworkPolicy), Cilium (eBPF + L7), Flannel (overlay), Weave (encrypted). Kubernetes uses CNI — each pod gets a unique IP. DNS via CoreDNS resolves service names to ClusterIPs.",
+      "lab": {
+        "description": "Create custom bridge network, attach containers, test DNS resolution",
+        "steps": [
+          "docker network create myapp-net",
+          "docker run -d --name redis --network myapp-net redis:alpine",
+          "docker run -d --name app --network myapp-net nginx",
+          "docker exec app ping redis — should resolve by name",
+          "docker network inspect myapp-net — see attached containers",
+          "docker run --rm --network myapp-net alpine nslookup redis"
+        ],
+        "expectedOutput": "Container resolves 'redis' by name to container IP. Shows user-defined bridge provides embedded DNS.",
+        "failureVariation": "Overlay network with 3 hosts: create swarm, attach service. If MTU mismatch, VXLAN encapsulation drops. Set MTU=1450 for overlay."
+      },
+      "interviewQuestions": {
+        "conceptual": [
+          "Docker bridge vs host vs overlay network differences?",
+          "How does Docker DNS resolution work on custom bridge?",
+          "What is CNI and how does Kubernetes use it?"
+        ],
+        "practical": [
+          "Two containers can't communicate — checklist?",
+          "Container exits with 'Address already in use' — cause?"
+        ],
+        "scenario": [
+          "Cross-host container communication fails — likely cause?",
+          "Pod in CrashLoopBackOff — how to check network?"
+        ],
+        "senior": [
+          "Calico vs Cilium — eBPF, NetworkPolicy, encryption differences",
+          "Design multi-tenant network isolation with CNI"
+        ],
+        "systemDesign": [
+          "Design container networking for 5000-node cluster — IP allocation, overlay, policy enforcement, service mesh"
+        ]
+      },
+      "industryExamples": {
+        "startup": "Single-host Docker, bridge network, simple port mapping.",
+        "midSize": "Docker Compose with custom bridge, Consul for service discovery.",
+        "enterprise": "Kubernetes with Calico CNI, NetworkPolicy, Istio mTLS.",
+        "faang": "Custom eBPF-based networking (Cilium), katran L4 LB, service mesh with sidecarless ambient mesh."
+      },
+      "commonMistakes": [
+        {
+          "mistake": "Using --link (deprecated) instead of custom bridge DNS",
+          "level": "beginner",
+          "fix": "Use docker network create && --network=mynet."
+        },
+        {
+          "mistake": "Exposing container ports to host unnecessarily",
+          "level": "production",
+          "fix": "Only publish ports that need external access. Use custom bridges for internal."
+        },
+        {
+          "mistake": "Not setting MTU for overlay networks — default 1500 fails with VXLAN overhead (50 bytes)",
+          "level": "senior",
+          "fix": "Set MTU=1450 on overlay networks: docker network create --opt com.docker.network.driver.mtu=1450 overlay-net."
+        }
+      ],
+      "bestPractices": [
+        {
+          "area": "security",
+          "practice": "Use internal-only networks for backend services: docker network create --internal backend-net"
+        },
+        {
+          "area": "performance",
+          "practice": "Use host networking for latency-sensitive apps (gRPC, Redis) when isolation isn't needed"
+        },
+        {
+          "area": "reliability",
+          "practice": "Define networks explicitly in docker-compose — never rely on default network"
+        },
+        {
+          "area": "observability",
+          "practice": "Export container network metrics: bytes sent/recv, packets dropped per container"
+        }
+      ],
+      "commandExpansions": [
+        {
+          "command": "docker network create --driver bridge --subnet 10.0.0.0/24 --ip-range 10.0.0.0/25 --gateway 10.0.0.1 mynet",
+          "what": "Create custom bridge with specific subnet",
+          "why": "Control IP allocation — avoid conflicts with existing networks",
+          "example": "docker network create --subnet 10.5.0.0/16 mynet",
+          "output": "abcdef1234567890abcdef1234567890abcd12345678abcdef1234567890abcd",
+          "explanation": "Creates named network with /16 subnet. Containers get IPs from this range.",
+          "failure": "IP conflict if subnet overlaps with host or VPN network. Check with ip route."
+        },
+        {
+          "command": "docker run -it --network host --pid host --cap-add SYS_ADMIN alpine nsenter -t 1 -n ip addr",
+          "what": "Enter host network namespace from container",
+          "why": "Debug host-level networking from inside a container",
+          "example": "docker run --rm --network host alpine ip addr",
+          "output": "Shows host's network interfaces (eth0, lo, docker0) from container perspective",
+          "explanation": "--network host gives container the host's network stack — no isolation but full visibility",
+          "failure": "Requires --cap-add SYS_ADMIN for nsenter access."
+        }
+      ]
+    },
+    "Cloud Networking": {
+      "example": {
+        "command": "aws ec2 describe-vpcs --query 'Vpcs[*].[VpcId,CidrBlock,IsDefault]' --output table && aws ec2 describe-subnets --filters Name=vpc-id,Values=vpc-123 --query 'Subnets[*].[SubnetId,CidrBlock,AvailabilityZone,MapPublicIpOnLaunch]' --output table",
+        "output": "VpcId               CidrBlock       IsDefault\nvpc-12345678        10.0.0.0/16     True\nvpc-23456789        172.31.0.0/16   False\n\nSubnetId        CidrBlock        AZ            MapPublicIpOnLaunch\nsubnet-1111     10.0.1.0/24      us-east-1a    True\nsubnet-2222     10.0.2.0/24      us-east-1b    False\nsubnet-3333     10.0.3.0/24      us-east-1a    False",
+        "explanation": "Default VPC (10.0.0.0/16) has public subnets (MapPublicIpOnLaunch=True). Second VPC (172.31.0.0/16) is custom. subnet-1111 auto-assigns public IPs (public subnet), subnet-2222 does not (private subnet).",
+        "productionMeaning": "VPC design determines security posture: public subnets for LBs/bastions, private subnets for apps/DBs. NAT Gateway enables outbound from private. VPC Endpoints keep traffic within AWS network — never traverse internet."
+      },
+      "productionScenario": "EC2 in private subnet can't pull Docker images from ECR. Route table has no NAT Gateway entry. Fix: add route to NAT Gateway for 0.0.0.0/0 in private route table. Better: use VPC Gateway Endpoint for S3 and VPC Interface Endpoint for ECR/Docker — no NAT needed, traffic stays in AWS backbone.",
+      "failureScenario": {
+        "description": "Security Group rule removed during change — all traffic to ALB blocked. 100% 503 errors until rule re-added.",
+        "severity": "S1",
+        "impact": "Complete application outage. All user-facing services unreachable."
+      },
+      "troubleshootingFlow": [
+        "SYMPTOM: ALB shows 'no healthy targets' but EC2 health endpoint 200",
+        "CHECK: aws elbv2 describe-target-health --target-group-arn tg-arn — health check results",
+        "CHECK: aws ec2 describe-security-groups — verify SG allows ALB traffic",
+        "CHECK: aws ec2 describe-network-acls — verify NACL allows both inbound/outbound",
+        "CHECK: ss -tlnp on EC2 — verify app is actually listening",
+        "ROOT CAUSE: SG missing inbound rule for ALB security group",
+        "FIX: aws ec2 authorize-security-group-ingress --group-id sg-app --protocol tcp --port 8080 --source-group sg-alb"
+      ],
+      "architectureView": "VPC: isolated virtual network. Subnets (public/private across AZs), Route Tables, IGW (internet ingress), NAT Gateway (outbound from private), VPC Peering (VPC-to-VPC), Transit Gateway (hub-spoke), VPC Endpoints (Gateway: S3/DynamoDB, Interface: others). Security Groups (stateful L4), NACLs (stateless L3/4 subnet). ALB (L7 path-based), NLB (L4 TCP/UDP, static IP). Global Accelerator (anycast).",
+      "lab": {
+        "description": "Create VPC with public/private subnets across 2 AZs, deploy ALB + EC2",
+        "steps": [
+          "aws ec2 create-vpc --cidr-block 10.0.0.0/16 — create VPC",
+          "aws ec2 create-subnet --vpc-id $VPC --cidr-block 10.0.1.0/24 --availability-zone us-east-1a",
+          "aws ec2 create-subnet --vpc-id $VPC --cidr-block 10.0.2.0/24 --availability-zone us-east-1b",
+          "aws ec2 create-internet-gateway && attach to VPC",
+          "aws ec2 create-route-table --vpc-id $VPC && create route 0.0.0.0/0 -> IGW",
+          "Associate route table with public subnets",
+          "Create ALB in public subnets, EC2 in private subnets, test connectivity"
+        ],
+        "expectedOutput": "ALB receives traffic on public subnets, routes to EC2 in private subnets. EC2 has no public IP — outbound via NAT.",
+        "failureVariation": "EC2 in private subnet can download from S3 but not apt packages (different destinations). Use Gateway Endpoint for S3, NAT Gateway for internet."
+      },
+      "interviewQuestions": {
+        "conceptual": [
+          "Public vs private subnet — how does outbound differ?",
+          "Security Group vs NACL — stateful vs stateless?",
+          "VPC Peering vs Transit Gateway — when to use each?"
+        ],
+        "practical": [
+          "EC2 in private subnet can't access internet — checklist?",
+          "ALB returns 503 despite targets healthy — debug steps?"
+        ],
+        "scenario": [
+          "New VPC peering connection established but instances can't communicate — what's missing?",
+          "Cross-region VPC connectivity — options and tradeoffs?"
+        ],
+        "senior": [
+          "Design VPC for HIPAA compliance — encryption, logging, network segmentation",
+          "Transit Gateway design with centralized inspection VPC for east-west traffic"
+        ],
+        "systemDesign": [
+          "Design global multi-region network — VPCs, TGW, Direct Connect, Site-to-Site VPN, DNS failover"
+        ]
+      },
+      "industryExamples": {
+        "startup": "Default VPC, single region, everything in public subnets.",
+        "midSize": "Custom VPC, public/private subnets, ALB + NAT Gateway, multi-AZ.",
+        "enterprise": "Hub-and-spoke with Transit Gateway, Direct Connect, inspection VPC, multi-account.",
+        "faang": "Custom SDN programming switches, BGP-based routing, global anycast, private WAN."
+      },
+      "commonMistakes": [
+        {
+          "mistake": "Putting RDS/ElastiCache in public subnets — exposed to internet",
+          "level": "beginner",
+          "fix": "Always place data stores in private subnets with only app SG access."
+        },
+        {
+          "mistake": "Using IGW for everything instead of VPC Endpoints — unnecessary internet exposure",
+          "level": "production",
+          "fix": "Use Gateway Endpoints for S3/DynamoDB, Interface Endpoints for other AWS services."
+        },
+        {
+          "mistake": "Overlapping CIDRs in VPC peering or TGW attachments — can't route",
+          "level": "senior",
+          "fix": "Plan CIDR allocation per VPC/region before building. Use /16 per VPC, reserve ranges."
+        }
+      ],
+      "bestPractices": [
+        {
+          "area": "security",
+          "practice": "Default-deny Security Groups — only allow specific ports from specific sources"
+        },
+        {
+          "area": "reliability",
+          "practice": "Deploy across 2+ AZs with ALB/NLB health checking each AZ independently"
+        },
+        {
+          "area": "cost",
+          "practice": "Use VPC Endpoints to avoid NAT Gateway data processing charges ($0.045/GB)"
+        },
+        {
+          "area": "performance",
+          "practice": "Place ALB and EC2 in same AZ to minimize cross-AZ data transfer costs"
+        }
+      ],
+      "commandExpansions": [
+        {
+          "command": "aws ec2 describe-instances --query 'Reservations[].Instances[].[InstanceId,PrivateIpAddress,PublicIpAddress,VpcId,SubnetId]' --output table",
+          "what": "List all EC2 with network info",
+          "why": "Quick inventory of IPs, VPCs, subnets across all instances",
+          "example": "aws ec2 describe-instances --query 'Reservations[].Instances[].[InstanceId,PrivateIpAddress,State.Name]' --output table",
+          "output": "InstanceId      PrivateIp  State\ni-abc123        10.0.1.5   running\ni-def456        10.0.2.10  running",
+          "explanation": "Shows each instance's placement in VPC network — essential for network debugging",
+          "failure": "If no instances, returns empty. Check region: aws configure or --region."
+        },
+        {
+          "command": "aws ec2 describe-network-interfaces --filters Name=subnet-id,Values=subnet-1111 --query 'NetworkInterfaces[].Association.PublicIp' --output text",
+          "what": "Find public IPs in a subnet",
+          "why": "Identify which ENIs in a subnet have public IPs (public vs private subnet)",
+          "example": "aws ec2 describe-network-interfaces --filters Name=subnet-id,Values=subnet-2222 --query 'NetworkInterfaces[].Association'",
+          "output": "None (empty — subnet is private, no public IPs)",
+          "explanation": "Empty output confirms subnet is truly private — no public IPs assigned",
+          "failure": "Too many ENIs? Use --max-items and --starting-token for pagination."
+        }
+      ]
+    },
+    "MLOps Networking": {
+      "example": {
+        "command": "iperf3 -c 10.0.1.10 -p 5201 -t 30 -P 8 && nccl-tests/build/all_reduce_perf -b 8 -e 128M -f 2 -g 8 2>/dev/null | grep 'Time' | head -3",
+        "output": "[ID] Interval           Transfer     Bitrate         Retr\n[ 5]   0.00-30.00  sec  35.0 GBytes  10.0 Gbits/sec  0\n[ 7]   0.00-30.00  sec  35.0 GBytes  10.0 Gbits/sec  2\nN=8  size=8M  time=0.045s  algbw=187.23 GB/s\nN=8  size=64M time=0.089s  algbw=754.38 GB/s\nN=8  size=128M time=0.145s  algbw=925.44 GB/s",
+        "explanation": "iperf3 shows 10Gbps line rate with 0 retransmissions — healthy interconnect. NCCL all_reduce benchmark shows scaling: larger messages achieve higher bandwidth (925 GB/s for 128M) due to better GPU Direct RDMA utilization.",
+        "productionMeaning": "ML training speed is directly limited by network bandwidth. NCCL benchmarks determine if GPUs can saturate their interconnect. <800 GB/s for 8 GPUs on 128M indicates a bottleneck — check NVLink, InfiniBand, or EFA."
+      },
+      "productionScenario": "Multi-node training runs 2x slower than expected. iperf3 shows 25 Gbps instead of 100 Gbps. Root cause: EFA (Elastic Fabric Adapter) not enabled on instance type — using TCP instead of RDMA. Fix: launch p4d.24xlarge instances with EFA enabled, verify with fi_info | grep efa.",
+      "failureScenario": {
+        "description": "NCCL hangs during all_reduce — timeout after 30 minutes. Training job wasted GPU hours.",
+        "severity": "S1",
+        "impact": "GPU cluster utilization drops to 0%. Training jobs fail. $1000s in wasted compute."
+      },
+      "troubleshootingFlow": [
+        "SYMPTOM: NCCL timeout, training stalls",
+        "CHECK: nvidia-smi topo -m — GPU topology (NVLink vs PCIe)",
+        "CHECK: iperf3 between nodes — network bandwidth",
+        "CHECK: nccl-tests/all_reduce_perf — NCCL bandwidth",
+        "CHECK: cat /proc/cnodes — check NCCL topology file",
+        "CHECK: CUDA_VISIBLE_DEVICES and NCCL_SOCKET_IFNAME env vars",
+        "ROOT CAUSE: NCCL using TCP instead of RDMA (missing EFA/IB)",
+        "FIX: Set NCCL_IB_DISABLE=0, NCCL_NET_GDR_LEVEL=5",
+        "PREVENTION: Always run nccl-tests on new cluster before production training"
+      ],
+      "architectureView": "ML training network: GPU → NVLink (intra-node, 600 GB/s H100) → PCIe → NIC → EFA/InfiniBand (inter-node, 400 Gbps). NCCL uses ring/all-reduce algorithm. Model parallelism (tensor/pipeline) needs high bandwidth. Inference network: model serving (vLLM/Triton) → gRPC/REST → client, with cold start requiring model download from S3/ECR at 10+ Gbps. RAG network: ingest → chunk → embed → vector DB → retrieve all with network hops between services.",
+      "lab": {
+        "description": "Test GPU interconnect performance and identify bottlenecks",
+        "steps": [
+          "nvidia-smi topo -m — check NVLink topology",
+          "nccl-tests/build/all_reduce_perf -b 8 -e 128M -f 2 -g $(nvidia-smi -L | wc -l) — NCCL bandwidth",
+          "iperf3 -c <peer> -t 10 — TCP bandwidth between nodes",
+          "ib_write_bw -d mlx5_0 -a — InfiniBand/EFA RDMA bandwidth",
+          "fi_info -p efa — check EFA provider capabilities"
+        ],
+        "expectedOutput": "NVLink shows PXB/PIX connections. NCCL test shows bandwidth scaling with message size. iperf3 shows link rate. RDMA tests show lower latency than TCP.",
+        "failureVariation": "EFA not available on instance type (e.g., g5 vs p4d). Fall back to ENA but expect 50-80% lower NCCL bandwidth."
+      },
+      "interviewQuestions": {
+        "conceptual": [
+          "What is NCCL and why does it matter for multi-GPU training?",
+          "NVLink vs PCIe vs InfiniBand — bandwidth and latency?",
+          "Cold start in ML inference — what causes it and how to mitigate?"
+        ],
+        "practical": [
+          "Multi-node training is slow — diagnostic steps?",
+          "Model download from S3 takes 10 minutes — how to speed up?"
+        ],
+        "scenario": [
+          "Training loss not decreasing after scaling to 64 GPUs — network issue?",
+          "Inference API has 5s p99 latency — where are the network bottlenecks?"
+        ],
+        "senior": [
+          "Design network for 1000-GPU training cluster — topology, congestion control, collective operations",
+          "gRPC vs REST vs WebSocket for model inference streaming — tradeoffs"
+        ],
+        "systemDesign": [
+          "Design global inference infrastructure — model distribution, edge caching, multi-region routing, cold start mitigation, canary deployment with traffic splitting"
+        ]
+      },
+      "industryExamples": {
+        "startup": "Single GPU inference, basic HTTP serving, no multi-node training.",
+        "midSize": "Multi-GPU servers (A100 x 8), EFA for training, vLLM for inference, S3 for model storage.",
+        "enterprise": "1000+ GPU clusters (H100), InfiniBand NDR400, NVIDIA DGX SuperPOD, KServe for inference.",
+        "faang": "Custom interconnects (TPU pods), optical switching, proprietary collective algorithms, global inference mesh with <10ms P99."
+      },
+      "commonMistakes": [
+        {
+          "mistake": "Using TCP instead of RDMA for GPU communication — 10x lower bandwidth",
+          "level": "production",
+          "fix": "Use EFA/InfiniBand instances, install OFED/EFA drivers, verify with fi_info."
+        },
+        {
+          "mistake": "Not setting NCCL environment variables — default topology detection may be wrong",
+          "level": "senior",
+          "fix": "Set NCCL_IB_DISABLE=0 NCCL_NET_GDR_LEVEL=5 NCCL_SOCKET_IFNAME=eth0 for optimal performance."
+        },
+        {
+          "mistake": "Baking full model weights into Docker image — slow deploys, image bloat (50+ GB)",
+          "level": "beginner",
+          "fix": "Mount model weights from S3/EFS via volume mount or download on startup with fast network."
+        }
+      ],
+      "bestPractices": [
+        {
+          "area": "performance",
+          "practice": "Use EFA for multi-node training — RDMA bypasses kernel, reduces latency 10x vs TCP"
+        },
+        {
+          "area": "cost",
+          "practice": "Right-size instance networking: p4d (400 Gbps EFA) for training, g5 (25 Gbps ENA) for inference"
+        },
+        {
+          "area": "reliability",
+          "practice": "Implement NCCL timeout and retry: NCCL_TIMEOUT=300 NCCL_RETRY=5"
+        },
+        {
+          "area": "observability",
+          "practice": "Collect NCCL debug traces: NCCL_DEBUG=INFO NCCL_DEBUG_FILE=/tmp/nccl.log"
+        }
+      ],
+      "commandExpansions": [
+        {
+          "command": "nvidia-smi topo -m",
+          "what": "GPU topology matrix",
+          "why": "Understand GPU interconnect — NVLink vs PCIe, determine NCCL algorithm",
+          "example": "nvidia-smi topo -m",
+          "output": "      GPU0 GPU1 GPU2 GPU3 CPU Affinity\nGPU0  X    NV1  NV2  PHB  0-63\nGPU1  NV1  X    PHB  NV2  0-63\nGPU2  NV2  PHB  X    NV1  0-63\nGPU3  PHB  NV2  NV1  X     0-63",
+          "explanation": "NV1/NV2 = NVLink (fast), PHB = PCIe host bridge (slower). NCCL uses this to pick optimal communication path.",
+          "failure": "If all show 'PHB' (PCIe), NVLink not connected — check nvidia-smi nvlink --status or reseat GPUs."
+        },
+        {
+          "command": "NCCL_DEBUG=INFO NCCL_ALGO=Ring python -c \"import torch; torch.distributed.init_process_group('nccl', init_method='env://')\" 2>&1 | grep -E 'NCCL INFO (Ring|Topology|NET)'",
+          "what": "Debug NCCL initialisation and topology detection",
+          "why": "Verify NCCL picks correct interconnect (RDMA vs TCP) and algorithm",
+          "example": "NCCL_DEBUG=INFO NCCL_ALGO=Ring python -c \"import torch; torch.distributed.init_process_group('nccl', init_method='env://')\" 2>&1",
+          "output": "NCCL INFO NET/IB : Using device mlx5_0 [IB]\nNCCL INFO Using network IB\nNCCL INFO Ring 0 : 0/1/2/3",
+          "explanation": "NCCL detected InfiniBand device — using RDMA, best performance. If 'Using network IP' instead, TCP fallback.",
+          "failure": "If NCCL picks TCP ('Using network IP'), check EFA/IB drivers, NCCL_IB_DISABLE flag, and instance type support."
+        }
+      ]
     }
   },
   "5": {
